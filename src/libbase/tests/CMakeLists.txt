@@ -1,0 +1,21 @@
+add_executable(TestDebug TestDebug.cpp)
+target_link_libraries(TestDebug glue_libbase)
+
+add_executable(TestTime TestTime.cpp)
+target_link_libraries(TestTime glue_libbase)
+
+add_executable(TestBoundedBlockingQueue TestBoundedBlockingQueue.cpp)
+target_link_libraries(TestBoundedBlockingQueue glue_libbase)
+
+add_executable(TestBoundedPriorityQueue TestBoundedPriorityQueue.cpp)
+target_link_libraries(TestBoundedPriorityQueue glue_libbase)
+
+add_executable(TestHeap TestHeap.cpp)
+target_link_libraries(TestHeap glue_libbase)
+
+add_executable(TestThreadPool TestThreadPool.cpp)
+target_link_libraries(TestThreadPool glue_libbase)
+
+add_executable(TestWaitMember TestWaitMember.cpp)
+target_link_libraries(TestWaitMember glue_libbase)
+

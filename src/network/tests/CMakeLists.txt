@@ -1,0 +1,23 @@
+add_executable(TestBuffer TestBuffer.cpp)
+target_link_libraries(TestBuffer glue_network)
+
+add_executable(TestEpoll TestEpoll.cpp)
+target_link_libraries(TestEpoll glue_network)
+
+add_executable(TestSocketAddr TestSocketAddr.cpp)
+target_link_libraries(TestSocketAddr glue_network)
+
+add_executable(TestSocketClient TestSocketClient.cpp)
+target_link_libraries(TestSocketClient glue_network)
+
+add_executable(TestSocketServer TestSocketServer.cpp)
+target_link_libraries(TestSocketServer glue_network)
+
+add_executable(TestTcpServer TestTcpServer.cpp)
+target_link_libraries(TestTcpServer glue_network)
+
+add_executable(TestTimerQueue TestTimerQueue.cpp)
+target_link_libraries(TestTimerQueue glue_network)
+
+add_executable(TestTimerQueue1 TestTimerQueue1.cpp)
+target_link_libraries(TestTimerQueue1 glue_network)
