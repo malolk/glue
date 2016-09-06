@@ -29,16 +29,20 @@ The project Glue is built for three reasons:
 
 ```
 INSTALL_DIR=<the header and library install path that you specify> ./build.sh
+
+Note: Headers and static library will be installed into **release-install** directory in default while you didn't specify any install directory.
 ```
-Headers and static library will be installed into **release-install** directory in default while you didn't specify any install directory.
 
 - specify build type(debug or release)
 
 ```
 BUILD_TYPE=<debug or release> ./build.sh
+
+Note: Build type is release when not specified
 ```
-Build type is release when not specified
 
 - executable files
-The executable files of tests for the library could be found in directory build/release(debug)/bin
 
+```
+The executable files of tests for the library could be found in directory build/release(debug)/bin
+```
