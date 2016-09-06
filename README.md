@@ -3,26 +3,27 @@ Glue
 
 A c++ network library for personal use.
 
-## purpose
+## Purpose
 
 The project Glue is built for three reasons: 
+
 1. Customizing my personal network library when building other network-related projects
 2. Sharpening my programming skills both in network programming and C++ programming
 3. Sharing the contributions that I made
 
-## programming model
+## Programming model
 
 * non-blocking I/O
 * one epoll per thread
 * thread-pool
 
-## environment required
+## Environment required
 
 * Linux(Version 2.6.8+)
 * cmake(Version 2.6+)
 * g++(Version 4.8.1+) support C++11 
 
-## compile and run
+## Compile and run
 
 - specify install directory for header and library
 
