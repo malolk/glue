@@ -33,7 +33,6 @@ const IgnoreSigpipe sigpipeInit;
 
 void Socket::commonCtor(bool beServerIn, bool connectedIn, int domainIn, int typeIn, int protocolIn)
 {
-	LOGTRACE();
 	CHECKEXIT(sockfd >= 0);
 	beServer = beServerIn;
 	domain = domainIn;
@@ -43,11 +42,11 @@ void Socket::commonCtor(bool beServerIn, bool connectedIn, int domainIn, int typ
 	binded = false;
 	connected = connectedIn;
 	enableNonBlock(1);
+	enableTcpNoDelay(1);
 }
 
 void Socket::bind(const std::string &ipStr, uint16_t port)
 {
-	LOGTRACE();
 	CHECK(beServer);
 	SocketAddress sa(ipStr, port);
 
@@ -57,7 +56,6 @@ void Socket::bind(const std::string &ipStr, uint16_t port)
 
 void Socket::listen(int backlog)
 {
-	LOGTRACE();
 	CHECK(beServer);
 	CHECK(binded);
 	CHECK(::listen(sockfd, backlog) == 0);
@@ -65,7 +63,6 @@ void Socket::listen(int backlog)
 
 int Socket::accept(SocketAddress &sa)
 {
-	LOGTRACE();
 	CHECK(binded);
 	int ret = 0;
 	socklen_t addrLen = sizeof(SocketAddress::AddrType);
@@ -106,29 +103,24 @@ int Socket::accept(SocketAddress &sa)
 }
 
 
-void Socket::connect(const std::string &ipStr, uint16_t port)
+int Socket::connect(const std::string &ipStr, uint16_t port)
 {
-	LOGTRACE();
 	CHECK(!beServer && !connected);
 	SocketAddress sa(ipStr, port);
 	int ret = 0;
-	while(1)
+	ret = ::connect(sockfd, sa.getAddrTypeVoid(), sa.getAddrLength());
+	if (ret < 0)
 	{
-		ret = ::connect(sockfd, sa.getAddrTypeVoid(), sa.getAddrLength());
-		if (ret < 0)
-		{
-			int err = errno;
-			if (err == EAGAIN)  continue;
-			else LOGERROR(err);
-		}else 
-			break;
+		if (errno != EAGAIN)
+			LOGERROR(errno);
+		return -1;
 	}
-	setConnected();	
+	setConnected();
+	return 0;	
 }
 
 void Socket::getPeerName(SocketAddress& sa)
 {
-	LOGTRACE();
 	CHECK(connected);
 	socklen_t addrLen = sizeof(SocketAddress::AddrType);
 
@@ -137,7 +129,6 @@ void Socket::getPeerName(SocketAddress& sa)
 
 void Socket::getSockName(SocketAddress &sa)
 {
-	LOGTRACE();
 	CHECK(connected || binded);
 	socklen_t addrLen = sizeof(SocketAddress::AddrType);
 
@@ -151,7 +142,6 @@ namespace network
 
 ssize_t Socket::recvBytes(ByteBuffer& buf)
 {
-	LOGTRACE();
 	CHECK(!closed);
 	char anotherBuf[ANOTHER_BUF_SIZE];     
 	struct iovec vecOfBuf[2];
@@ -167,7 +157,7 @@ ssize_t Socket::recvBytes(ByteBuffer& buf)
 		int err = errno;
 		if (err == EAGAIN || err == EWOULDBLOCK || err == EINTR)
 		{
-			LOGINFO("no data in buffer");
+			LOGWARN("no data in buffer");
 			return NODATA;
 		}else
 		{
@@ -191,7 +181,6 @@ ssize_t Socket::recvBytes(ByteBuffer& buf)
 // Note: handle sigpipe error?
 ssize_t Socket::sendBytes(ByteBuffer& buf)
 {
-	LOGTRACE();
 	CHECK(!closed);
 	const size_t sendableBytes = buf.readableBytes();
 	ssize_t sentBytes = ::write(sockfd, buf.addrOfRead(), sendableBytes);
@@ -200,7 +189,7 @@ ssize_t Socket::sendBytes(ByteBuffer& buf)
 		int err = errno;
 		if (err == EAGAIN || err == EWOULDBLOCK)
 		{
-			LOGINFO("no avaliable space to write");
+			LOGWARN("no avaliable space to write");
 			return 0;
 		}
 		else if (err == EPIPE)
@@ -216,10 +205,8 @@ ssize_t Socket::sendBytes(ByteBuffer& buf)
 	}
 	else
 	{
-		LOGTRACE();
 		if (sentBytes > 0)
 			buf.movePosOfRead(static_cast<size_t>(sentBytes));
-		LOGTRACE();
 	}
 	return sentBytes;
 }

@@ -39,19 +39,21 @@ void Connection::unsetTimer()
 
 void Connection::setReadOperation(const CallbackOnRead& cb)
 {
-	LOGTRACE();
 	readCb = cb;
+}
+
+void Connection::setInitOperation(const CallbackOnInit& cb)
+{
+	initCb = cb;	
 }
 
 void Connection::setCloseOperation(const CallbackOnClose& cb)
 {
-	LOGTRACE();
 	closeCb = cb;
 }
 
 void Connection::sendData(BUF& data)
 {
-	LOGTRACE();
 	// io operation in single thread, safe
 	epollPtr->runNowOrLater(std::bind(&Connection::sendDataInEpollThread,
 	this, data));
@@ -59,7 +61,6 @@ void Connection::sendData(BUF& data)
 
 void Connection::sendDataInEpollThread(BUF& data)
 {
-	LOGTRACE();
 	ssize_t sentBytes = 0;
 	size_t sendableBytes = data.readableBytes();
 	if (sendBuffer.readableBytes() == 0)
@@ -68,7 +69,7 @@ void Connection::sendDataInEpollThread(BUF& data)
 		if (sentBytes == WRERR)
 		{
 			state = CLOSED;
-			epollPtr->runLater(std::bind(&EventChannel::handleClose, &channel));
+			epollPtr->runNowOrLater(std::bind(&EventChannel::handleClose, &channel));
 			return;
 		}
 		if (static_cast<size_t>(sentBytes) == sendableBytes)
@@ -82,8 +83,7 @@ void Connection::sendDataInEpollThread(BUF& data)
 	
 	if(sendableBytes > static_cast<size_t>(sentBytes))
 	{
-		sendBuffer.appendBytes(data.addrOfRead() + sentBytes, 
-		sendableBytes - sentBytes);
+		sendBuffer.appendBytes(data.addrOfRead() + sentBytes, sendableBytes - sentBytes);
 		data.movePosOfRead(sendableBytes);
 		if (!channel.isNotifyOnWrite())
 			channel.enableWriting();
@@ -92,12 +92,11 @@ void Connection::sendDataInEpollThread(BUF& data)
 
 void Connection::writeData()
 {
-	LOGTRACE();
 	ssize_t sentBytes = sock.sendBytes(sendBuffer);
 	if (sentBytes == WRERR)
 	{
 		state = CLOSED;
-		epollPtr->runLater(std::bind(&EventChannel::handleClose, &channel));
+		epollPtr->runNowOrLater(std::bind(&EventChannel::handleClose, &channel));
 		return;
 	}
 	sendBuffer.movePosOfRead(sentBytes);
@@ -111,10 +110,12 @@ void Connection::writeData()
 
 void Connection::readData()
 {
-	LOGTRACE();
 	ssize_t recvBytes = sock.recvBytes(recvBuffer);
 	if (recvBytes > 0)
-		readCb(recvBuffer);   
+	{
+		std::shared_ptr<Connection> tmpPtr = shared_from_this();
+		readCb(tmpPtr, recvBuffer);  
+	} 
 	else if (recvBytes == NODATA)
 		return;
 	else if (recvBytes == 0)
@@ -132,17 +133,22 @@ void Connection::readData()
 
 void Connection::close()
 {
-	LOGTRACE();
 	CHECK(closeCb);
 	channel.disableAll();
 	state = CLOSED;
 	closeCb();
 }
 
-void Connection::distroy(const std::shared_ptr<Connection> conn)
+void Connection::distroy(const std::shared_ptr<Connection>& conn)
 {
-	LOGTRACE();
 	CHECK(state == CLOSED);
+	channel.disableAll();
+	epollPtr->delChannel(&channel);
+}
+
+void Connection::shutdownNow()
+{
+	state = CLOSED;
 	channel.disableAll();
 	epollPtr->delChannel(&channel);
 }
@@ -150,14 +156,12 @@ void Connection::distroy(const std::shared_ptr<Connection> conn)
 // could be used across threads
 void Connection::shutdown()
 {
-	LOGTRACE();
 	state = CLOSING;
-	epollPtr->runLater(std::bind(&Connection::stopWrite, this));
+	epollPtr->runNowOrLater(std::bind(&Connection::stopWrite, this));
 }
 
 void Connection::stopWrite()
 {
-	LOGTRACE();
 	CHECK(state == CLOSING);
 	if (!channel.isNotifyOnWrite())
 		sock.stopWrite();

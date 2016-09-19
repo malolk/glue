@@ -2,6 +2,7 @@
 #define LIBBASE_DEBUG_H
 
 #include <libbase/CurrentThread.h>
+#include <libbase/TimeStamp.h>
 
 #include <iostream>
 #include <string>
@@ -11,12 +12,27 @@
 #include <stdlib.h>
 
 #ifndef DEBUG
-	#define LOGTRACE() { ; }
+	#define LOGTRACE() while(0)
+	#define LOGPRINT(X, LEVEL) while(0) 
 #else
-	#define LOGTRACE() do { std::cerr << (std::string("TRACE: ") + __FILE__ + " LINE:" + std::to_string(__LINE__) + " : " + __func__ + "()") << " T" << libbase::tid() << std::endl; } while(0)
+	#define LOGTRACE() do { std::cerr << ( \
+	libbase::TimeStamp().bePretty() +      \
+	std::string(" TRACE: ") +              \
+	__FILE__ + " LINE:" +                  \
+	std::to_string(__LINE__) + " : " +     \
+	 __func__ + "() T" +                   \
+	std::to_string(libbase::tid())) << std::endl; } while(0)
+
+	#define LOGPRINT(X, LEVEL) do { std::cerr << ( \
+	libbase::TimeStamp().bePretty() + " " +        \
+	std::string(LEVEL) + ": " +                    \
+	__FILE__ + " LINE:" +                          \
+	std::to_string(__LINE__) + " : " +             \
+	__func__ + "() : " +                           \
+	 X +                                           \
+	 " T" + std::to_string(libbase::tid())) << std::endl; } while(0)
 #endif
 
-#define LOGPRINT(X, LEVEL) do { std::cerr << (std::string(LEVEL) + ": " + __FILE__ + " LINE:" + std::to_string(__LINE__) + " " + X) << std::endl; } while(0)
 #define LOGINFO(X)  LOGPRINT(X, std::string("INFO")) 
 #define LOGWARN(X)  LOGPRINT(X, std::string("WARN")) 
 #define LOGFATAL(X) do { LOGPRINT(X, std::string("FATAL")); _Exit(1); } while(0) 

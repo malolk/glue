@@ -36,11 +36,13 @@ enum
 	WRERR,
 };
 
-const int MAX_QUEUE_SIZE =	20; 
+const int MAX_QUEUE_SIZE =	100; 
 
 class Socket: private Noncopyable
 {
 public:
+	// beServerIn == true, then the socket would be a listen socket, 
+	// otherwise, it would be a common socket.
 	explicit Socket(bool beServerIn = false, int domainIn = AF_INET, int typeIn = SOCK_STREAM, int protocolIn = IPPROTO_IP):
 		sockfd(::socket(domainIn, typeIn, protocolIn))
 	{
@@ -60,6 +62,7 @@ public:
 	}
 	
 	bool isServerSocket() { return beServer; } 	
+	bool isClosed() { return closed; }
 	void stopWrite() { shutdown(SHUT_WR); }
 	void stopRead()  { shutdown(SHUT_RD); }
 	void close();
@@ -69,7 +72,7 @@ public:
 	
 	// should check the ret, EMFILE or ENFILE ?
 	int accept(SocketAddress &sa);
-	void connect(const std::string &ipStr, uint16_t port);
+	int connect(const std::string &ipStr, uint16_t port);
 	int getSockfd() { return sockfd; }
 	void getPeerName(SocketAddress &sa);
 	void getSockName(SocketAddress &sa);
@@ -77,31 +80,26 @@ public:
     ssize_t sendBytes(ByteBuffer& buf);
 	void enableAddrReuse(int flag)
 	{
-		LOGTRACE();
 		CHECK(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, static_cast<void *>(&flag), sizeof flag) == 0);
 	}
 
 	void enablePortReuse(int flag)
 	{
-		LOGTRACE();
 		CHECK(setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, static_cast<void *>(&flag), sizeof flag) == 0);
 	}
 
 	void enableKeepAlive(int flag)
 	{
-		LOGTRACE();
 		CHECK(setsockopt(sockfd, SOL_SOCKET, SO_KEEPALIVE, static_cast<void *>(&flag), sizeof flag) == 0);
 	}
 
 	void enableTcpNoDelay(int flag)
 	{
-		LOGTRACE();
 		CHECK(setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, static_cast<void *>(&flag), sizeof flag) == 0);
 	}
 
 	void enableNonBlock(int flag)
 	{
-		LOGTRACE();
 		int val = fcntl(sockfd, F_GETFL, 0);
 		CHECK((val >= 0));
 		val = (flag == 1 ? (val | O_NONBLOCK) : (val & (~O_NONBLOCK)));
@@ -113,7 +111,6 @@ private:
 	void setConnected() { CHECK(!connected); connected = true; }
 	int shutdown(int how) 
 	{  
-		LOGTRACE();
 		int ret = ::shutdown(sockfd, how);
 		if(ret) LOGERROR(errno);
 		return ret;
@@ -132,7 +129,6 @@ private:
 inline
 void Socket::close()
 {
-	LOGTRACE();
 	CHECK(!closed);
 	CHECK(::close(sockfd) == 0);	
 	closed = true;

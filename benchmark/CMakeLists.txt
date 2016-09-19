@@ -1,0 +1,4 @@
+add_executable(TestEventProcessTime TestEventProcessTime.cpp)
+target_link_libraries(TestEventProcessTime glue_network)
+
+

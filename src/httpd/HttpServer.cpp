@@ -13,8 +13,11 @@ void HttpServer::callbackOnRequest(ConnectionPtr& connPtr, ByteBuffer& buf)
 	HttpRequest httpReq(connPtr);
 	if (httpReq.isAlready(buf))
 	{
+		LOGTRACE();
 		httpReq.doRequest(buf);
+		LOGTRACE();
 		connPtr->shutdown();
+		LOGTRACE();
 	}
 }
 

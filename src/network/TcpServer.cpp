@@ -1,6 +1,7 @@
 #include <network/TcpServer.h>
 
 #include <string>
+#include <iostream>
 
 using namespace network;
 using namespace network::poller;
@@ -12,8 +13,7 @@ namespace network
 	const char pathOfIdleFd[] = "/dev/null";
 	void defaultReadOp(std::shared_ptr<Connection>& conn, ByteBuffer& buf)
 	{
-		LOGTRACE();
-		LOGINFO(std::string("read") + std::to_string(buf.readableBytes()) + std::string("bytes"));
+		std::cout << (std::string("receive ") + std::to_string(buf.readableBytes()) + std::string(" bytes : ") + buf.toString()) << std::endl;
 		conn->sendData(buf);
 		buf.reset();
 	}
@@ -22,7 +22,6 @@ namespace network
 
 void TcpServer::startServer()
 {
-	LOGTRACE();
 	if (!started)
 	{
 		started = true;
@@ -33,16 +32,13 @@ void TcpServer::startServer()
 			LOGWARN("thread pool size should be greater than zero");
 		else
 		{
-			threadPool.start(threadNum - 1);
 			Epoll epollMaster;
 			epollMaster.epollInitialize();
-			listOfEpollPtr.push_back(&epollMaster);
-			for (int index = 0; index < threadNum - 1; ++index)
-			{
-				std::shared_ptr<EpollThread> threadPtr = threadPool.getThreadPtr(index);
-				CHECK(threadPtr);
-				listOfEpollPtr.push_back(threadPtr->getEpollPtr());
-			}
+			epollMasterPtr = &epollMaster;
+
+			threadPool.setEpollMaster(&epollMaster);
+			threadPool.start();
+
 			srvSocket.bind(ipStr, port);
 			//port reuse
 			srvSocket.enablePortReuse(1); 
@@ -63,36 +59,16 @@ void TcpServer::startServer()
 
 void TcpServer::setReadOp(const CallbackOnReadOp& cb)
 {
-	LOGTRACE();
 	readOp = cb;
 }
 
 void TcpServer::shutdown()
 {
-	LOGTRACE();
-	listOfEpollPtr[0]->runLater(std::bind(&Epoll::epollClose, listOfEpollPtr[0]));
-}
-
-Epoll* TcpServer::getNextEpoll() 
-{
-	LOGTRACE();
-	CHECK(static_cast<unsigned int>(dispatchId) < listOfEpollPtr.size());
-	Epoll* ret = listOfEpollPtr[dispatchId++];
-	if (dispatchId == threadNum)
-		dispatchId = 0;
-	return ret;
-}
-
-void TcpServer::readConn(const TcpServer::CallbackOnReadOp& readOpIn, const std::string& connName, ByteBuffer& buf)
-{
-	LOGTRACE();
-	CHECK(connCluster.find(connName) != connCluster.end());
-	readOpIn(connCluster[connName], buf);
+	epollMasterPtr->runNowOrLater(std::bind(&Epoll::epollClose, epollMasterPtr));
 }
 
 void TcpServer::acceptConn()
 {
-	LOGTRACE();
 	SocketAddress connAddr;
 
 	while(1)
@@ -102,15 +78,20 @@ void TcpServer::acceptConn()
 		{
 			std::string connName = std::string("Connection-") + std::to_string(ret);
 			CHECK(connCluster.find(connName) == connCluster.end());
-			connCluster[connName] = std::shared_ptr<Connection>(new Connection(ret, getNextEpoll()));
-			connCluster[connName]->setReadOperation(std::bind(&TcpServer::readConn, this, readOp, connName, std::placeholders::_1));
-			connCluster[connName]->setCloseOperation(std::bind(&TcpServer::delConnection, this, connName));
-			connCluster[connName]->initiateChannel();
+			Epoll* epollPtr = threadPool.nextEpoll();
+			CHECK(epollPtr);
+
+			std::shared_ptr<Connection> connPtr = std::make_shared<Connection>(ret, epollPtr);
+			CHECK(connPtr);
+			connCluster[connName] = connPtr;
+			connPtr->setReadOperation(readOp);
+			connPtr->setCloseOperation(std::bind(&TcpServer::delConnection, this, connName));
+			connPtr->initiateChannel();
 		}
 		else 
 		{
 			// note: in case the ddos attack, set a limit on one IO operation
-			if (ret == NOCONN || ret == RETRY)
+			if(ret == NOCONN || ret == RETRY)
 				return;
 			else if (ret == LACKFD)
 			{
@@ -119,7 +100,8 @@ void TcpServer::acceptConn()
 				// note: server could close the socket directly
 				::close(tmpFd);
 				idleFd = ::open(pathOfIdleFd, O_CLOEXEC | O_NONBLOCK); 
-				continue;
+				CHECK(idleFd >= 0);
+				return;
 			}
 			else
 			{
@@ -133,25 +115,18 @@ void TcpServer::acceptConn()
 
 void TcpServer::delConnection(const std::string& key)
 {
-	LOGTRACE();
-	// fix
-	std::map<std::string, std::shared_ptr<Connection>>::iterator 
-		it = connCluster.find(key);
-	if(it == connCluster.end()) return;
-
-	it->second->getEpollPtr()->runLater(std::bind(
-				&TcpServer::delConnectionInEpoll, this, key));
+	epollMasterPtr->runNowOrLater(std::bind(&TcpServer::delConnectionInEpoll, this, key));
 }
 
 void TcpServer::delConnectionInEpoll(const std::string& key)
 {
-	LOGTRACE();
 	std::map<std::string, std::shared_ptr<Connection>>::iterator 
 		it = connCluster.find(key);
 	if (it == connCluster.end())
 		return;
 	std::shared_ptr<Connection> conn = it->second;
 	connCluster.erase(it);
+
 	conn->getEpollPtr()->runNowOrLater(std::bind(
 				&Connection::distroy, conn.get(), conn));
 }

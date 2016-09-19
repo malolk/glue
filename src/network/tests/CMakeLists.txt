@@ -21,3 +21,6 @@ target_link_libraries(TestTimerQueue glue_network)
 
 add_executable(TestTimerQueue1 TestTimerQueue1.cpp)
 target_link_libraries(TestTimerQueue1 glue_network)
+
+add_executable(TestTcpClient TestTcpClient.cpp)
+target_link_libraries(TestTcpClient glue_network)

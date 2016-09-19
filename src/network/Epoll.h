@@ -11,6 +11,7 @@
 #include <libbase/CurrentThread.h>
 
 #include <vector>
+#include <unordered_set>
 #include <memory>
 #include <functional>
 #include <atomic>
@@ -77,7 +78,7 @@ private:
 	void stopInEpoll();
 	void opEpoll(EventChannel*, int);
 	void handleEvents(int);
-	void handleEventsImpl(int, uint32_t);
+	void handleEventsImpl(EventChannel*, uint32_t);
 	void handleReqs();
 	void wakeup();
 	void wakeupChannelClose();
@@ -91,8 +92,8 @@ private:
 	std::atomic<bool> running;
 	std::atomic<bool> eventsHandling;
 	std::vector<struct epoll_event> events; 
-	std::vector<EventChannel*> addedEventChannels;
 	std::vector<FuncVoid> requests; 
+	std::unordered_set<EventChannel*> addedEventChannels;
 	libbase::MutexLock mu;
 };
 	

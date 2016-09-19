@@ -26,25 +26,27 @@ enum RunningState
 class EpollThreadPool: private libbase::Noncopyable
 {
 public:
-	EpollThreadPool(): 
-		runningState(UNSTARTED)
+	explicit EpollThreadPool(int threadSize = WORKERSIZE)
+		: dispatchId(0),
+		  threadCount(threadSize), 
+		  runningState(UNSTARTED)
 	{ }
 
 	~EpollThreadPool() {}
 
-	void start(int workerNum = WORKERSIZE);
+	void start();
 	void shutdown();
-
-	std::shared_ptr<EpollThread> getThreadPtr(int index)
+	void setEpollMaster(Epoll* epollIn)
 	{
-		CHECK(index >= 0 && index < workerSize);
-		CHECK(runningState == RUNNING);
-		return workerPtrList[index]; 
+		epollMaster = epollIn;	
 	}
+	Epoll* nextEpoll();
 
 private:
-	int workerSize;  // 1 epollMaster and (threadCount - 1) epollWorkers
+	int dispatchId;
+	int threadCount;  
 	bool runningState;
+	Epoll* epollMaster;
 	std::vector<std::shared_ptr<EpollThread>> workerPtrList;
 };
 

@@ -36,13 +36,11 @@ mimeType = {
 
 std::string HttpResponse::toHeader(const std::string& key, const std::string& value)
 {
-	LOGTRACE();
 	return (key + ": " + value + "\r\n");
 }
 
 std::string HttpResponse::getReason(const std::string& status)
 {
-	LOGTRACE();
 	if (code2Msg.find(status) != code2Msg.cend())
 		return std::string(code2Msg.at(status));
 
@@ -52,7 +50,6 @@ std::string HttpResponse::getReason(const std::string& status)
 
 std::string HttpResponse::getMimeType(const std::string& str)
 {
-	LOGTRACE();
 	if (mimeType.find(str) != mimeType.cend())
 		return std::string(mimeType.at(str));
 
@@ -86,7 +83,6 @@ void HttpResponse::sendStatusPage(const std::string& status, const std::string& 
 
 std::string HttpResponse::toHeaderPart(const std::string& fileType, size_t length, const std::string& status)
 {
-	LOGTRACE();
 	std::string header;
 	header.append(std::string("HTTP/1.1 ") + status + " " + getReason(status) + "\r\n");
 	header.append(toHeader("Server", "httpd"));
@@ -111,7 +107,6 @@ void HttpResponse::sendFile(const std::string& path, size_t length)
 		sendStatusPage("404", getFileName(path) + "Can't open");
 		return;
 	}	
-	LOGTRACE();
 
 	void* addr = mmap(NULL, length, PROT_READ, MAP_PRIVATE, fileFd, 0);
 #pragma GCC diagnostic ignored "-Wold-style-cast"
@@ -123,37 +118,31 @@ void HttpResponse::sendFile(const std::string& path, size_t length)
 		sendStatusPage("500", "Server error");
 		return;
 	}
-	LOGTRACE();
 
 	::close(fileFd);
 	Buf buf(header.size() + length);
 	buf.appendBytes(header);
 	conn->sendData(buf);
 	buf.reset();
-	LOGTRACE();
 
 	buf.appendBytes(static_cast<char *>(addr), length);
 	conn->sendData(buf);
 
 	int ret = munmap(addr, length);
 	CHECKX(ret != -1, "munmap error");
-	LOGTRACE();
 }
 
 std::string HttpResponse::getFileType(const std::string& path)
 {
-	LOGTRACE();
 	std::string::size_type n = path.find(".");
 	if (n == std::string::npos)
 		return getMimeType(".txt");
 	std::string type = path.substr(n);
-	LOGTRACE();
 	return getMimeType(type);
 }
 
 std::string HttpResponse::getFileName(const std::string& path)
 {
-	LOGTRACE();
 	std::string::size_type n = path.rfind("/");
 	if (n == std::string::npos)
 		return path;
@@ -173,6 +162,5 @@ void HttpResponse::send(Buf& buf, const std::string& fileType)
 	bufHeader.appendBytes(header);	
 	conn->sendData(bufHeader);
 	conn->sendData(buf);
-	LOGTRACE();
 }
 

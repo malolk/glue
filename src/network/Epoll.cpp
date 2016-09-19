@@ -15,7 +15,6 @@ using namespace libbase;
 
 void Epoll::epollInitialize()
 {
-	LOGTRACE();
 	CHECKEXIT((epfd = ::epoll_create1(EPOLL_CLOEXEC)) >= 0); 
 	CHECKEXIT((wakeupFd = ::eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK)) >= 0); 
 	threadId = tid();
@@ -30,33 +29,27 @@ void Epoll::epollInitialize()
 
 Timer* Epoll::addTimer(const TimeStamp& tm, const CallbackOnTimeout& cb, time_t interval)
 {
-	LOGTRACE();
 	return timerQueue.addTimer(tm, cb, interval);	
 }
 
 void Epoll::delTimer(Timer* timerAgent)
 {
-	LOGTRACE();
 	timerQueue.delTimer(timerAgent);
 }
 
 void Epoll::stop()
 {
-	LOGTRACE();
-	runLater(std::bind(&Epoll::stopInEpoll, this));	
+	runNowOrLater(std::bind(&Epoll::stopInEpoll, this));	
 }
 
 void Epoll::stopInEpoll()
 {
-	LOGINFO("");
 	assertInEpollThread();
-	running = false;       
+	running = false;      
 }
 
 void Epoll::epollClose()
 {
-	LOGINFO("");
-	LOGTRACE();
 	assertInEpollThread();
 	running = false;       
 	wakeup();
@@ -64,7 +57,6 @@ void Epoll::epollClose()
 
 void Epoll::runNowOrLater(const FuncVoid& req)
 {   
-	LOGTRACE();
 	if (isInEpollThread())
 		req();
 	else    
@@ -73,7 +65,6 @@ void Epoll::runNowOrLater(const FuncVoid& req)
 
 void Epoll::runLater(const FuncVoid& req)
 {
-	LOGTRACE();
 	{
 		libbase::MutexLockGuard m(mu);
 		requests.push_back(req);    
@@ -84,20 +75,16 @@ void Epoll::runLater(const FuncVoid& req)
 
 void Epoll::addChannel(EventChannel* ev)
 {
-	LOGTRACE();
-	LOGINFO("");
 	assertInEpollThread();
 	if(hasChannel(ev))
 		return;
 	opEpoll(ev, EPOLL_CTL_ADD);
-	addedEventChannels.push_back(ev);
+	addedEventChannels.insert(ev);
 	ev->addedAlready();
 }
 
 void Epoll::updateChannel(EventChannel* ev)
 {
-	LOGTRACE();
-	LOGINFO("");
 	assertInEpollThread();
 	if(hasChannel(ev))
 		opEpoll(ev, EPOLL_CTL_MOD);
@@ -105,27 +92,25 @@ void Epoll::updateChannel(EventChannel* ev)
 
 void Epoll::delChannel(EventChannel* ev)
 {
-	LOGTRACE();
-	LOGINFO("");
 	assertInEpollThread();
 
 	if(!hasChannel(ev)) 
 		return;
 	ev->disableAll();
 	opEpoll(ev, EPOLL_CTL_DEL);
-	std::vector<EventChannel*>::iterator iter = std::find(
-	addedEventChannels.begin(), addedEventChannels.end(), ev);
-	if (iter != addedEventChannels.end())
-		addedEventChannels.erase(iter);
+	if(hasChannel(ev))
+	{
+		ev->deleteInEpoll();
+		addedEventChannels.erase(ev);
+	}
 }
 
 
 void Epoll::opEpoll(EventChannel* ev, int op)
 {
-	LOGTRACE();
 	struct epoll_event event;
 	event.events = ev->getEventFlag();
-	event.data.fd = ev->iofd();
+	event.data.ptr = ev;
 	int ret = epoll_ctl(epfd, op, ev->iofd(), &event);
 	if(ret) 
 		LOGERROR(errno);	
@@ -133,20 +118,15 @@ void Epoll::opEpoll(EventChannel* ev, int op)
 
 void Epoll::runEpoll()
 {
-	LOGTRACE();
-	std::stringstream numStr;
-	numStr << threadId;
-	LOGINFO(std::string("Epoll start running in thread ") + numStr.str());
 	assertInEpollThread();
 	CHECK(running == false);
 	running = true;
 	while(running)
 	{
-	//	LOGINFO(">>>waiting<<<");
 		int ret = epoll_wait(epfd, &(*events.begin()), static_cast<int>(events.size()), -1);
 		CHECK(ret > 0);
-		if (static_cast<unsigned int>(ret) == events.size())
-			events.resize(ret * 2);
+		if (static_cast<size_t>(ret) == events.size())
+			events.resize(2 * events.size());
 		eventsHandling = true;
 		handleEvents(ret);
 		eventsHandling = false;
@@ -156,34 +136,27 @@ void Epoll::runEpoll()
 
 bool Epoll::hasChannel(EventChannel* ev)
 {
-	LOGTRACE();
-	return (std::find(addedEventChannels.cbegin(),
-				addedEventChannels.cend(), ev) != addedEventChannels.cend());	
+	return addedEventChannels.count(ev);	
+//	return ev->isAdded();
 }
 
 void Epoll::handleEvents(int numOfEvents)
 {
-	LOGTRACE();
-	LOGINFO("");
 	assertInEpollThread();
 	for (int index = 0; index < numOfEvents; ++index)
 	{
-		int iofd = events[index].data.fd;
+		EventChannel* chanPtr = static_cast<EventChannel*>(events[index].data.ptr);
 		uint32_t retEvent = events[index].events;
-		handleEventsImpl(iofd, retEvent);
+		handleEventsImpl(chanPtr, retEvent);
 	}
 }
 
-void Epoll::handleEventsImpl(int fd, uint32_t rEvent)
+void Epoll::handleEventsImpl(EventChannel* chanPtr, uint32_t rEvent)
 {
-	LOGTRACE();
-	std::vector<EventChannel*>::iterator chanIt = std::find_if(
-			addedEventChannels.begin(), addedEventChannels.end(), 
-			[fd](const EventChannel* chanPtr) -> bool { return (chanPtr->iofd() == fd); });
-	CHECK(chanIt != addedEventChannels.end());
-	EventChannel* chanPtr = *chanIt;
-	CHECK(chanPtr->iofd() == fd);
-	CHECK(chanPtr != nullptr);
+#ifndef NDEBUG
+	CHECK(hasChannel(chanPtr));
+#endif
+
 	if (rEvent & EPOLLIN || rEvent & EPOLLRDHUP || rEvent & EPOLLPRI)
 	{
 		chanPtr->handleRead();
@@ -197,14 +170,13 @@ void Epoll::handleEventsImpl(int fd, uint32_t rEvent)
 	}
 	else if (!(rEvent & EPOLLIN) && (rEvent & EPOLLHUP))
 	{
-		LOGWARN(std::string("Hub on fd: ") + std::to_string(fd));
+		LOGWARN(std::string("Hub on fd: ") + std::to_string(chanPtr->iofd()));
 		chanPtr->handleClose();
 	}
 }
 
 void Epoll::handleReqs()
 {
-	LOGTRACE();
 	std::vector<FuncVoid> rcvReqs;
 	{
 		MutexLockGuard m(mu);
@@ -220,7 +192,6 @@ void Epoll::handleReqs()
 
 void Epoll::wakeup()
 {
-	LOGTRACE();
 	uint64_t buf = 1;
 	ssize_t ret = ::write(wakeupFd, &buf, sizeof(uint64_t));
 	if (ret < 0)
@@ -240,7 +211,6 @@ void Epoll::wakeup()
 // TODO: make read IO generic
 void Epoll::wakeupChannelRead()
 {
-	LOGTRACE();
 	uint64_t buf;
 	ssize_t ret = ::read(wakeupFd, &buf, sizeof(uint64_t));
 	if (ret < 0)
@@ -253,7 +223,7 @@ void Epoll::wakeupChannelRead()
 				LOGWARN("event read error: EINTR");
 		}
 		if (err == EAGAIN)
-			LOGINFO("event read: EAGAIN");
+			LOGWARN("event read: EAGAIN");
 		else
 			LOGERROR(err);		
 	}
@@ -261,7 +231,6 @@ void Epoll::wakeupChannelRead()
 
 void Epoll::wakeupChannelClose()
 {
-	LOGTRACE();
 	wakeChannel.disableAll();
 }
 

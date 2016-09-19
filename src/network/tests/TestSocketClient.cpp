@@ -29,6 +29,7 @@ int main()
 			buf.appendBytes(sa.toString());
 			ssize_t sentBytes = clientSocket.sendBytes(buf);
 			LOGINFO(std::string("sent bytes ") + std::to_string(sentBytes));
+			(void)sentBytes;
 			clientSocket.recvBytes(buf);
 			std::cout << "received : " << buf.toString() << "\n\n\n";
 			buf.reset();

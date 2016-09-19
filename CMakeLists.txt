@@ -25,7 +25,7 @@ string(REPLACE ";" " " CMAKE_CXX_FLAGS "${CXX_FLAGS}")
 set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -DDEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2 -finline-limit=1000 -DNDEBUG")
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/lib)
 
 message(STATUS "executable path " ${EXECUTABLE_OUTPUT_PATH})
@@ -41,4 +41,7 @@ if(NOT CMAKE_BUILD_NO_EXAMPLES)
 	add_subdirectory(src/httpd)
 endif()
 
+if(NOT CMAKE_BUILD_NO_TESTS)
+	add_subdirectory(benchmark)
+endif()
 

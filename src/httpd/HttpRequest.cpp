@@ -2,10 +2,12 @@
 #include <httpd/HttpResponse.h>
 #include <libbase/StringUtil.h>
 
-#include <stdlib.h>
-#include <signal.h>
-#include <sys/wait.h>
-#include <sys/types.h>
+//#include <stdlib.h>
+#include <signal.h>    // for kill()
+#include <sys/wait.h>  // for wait()
+#include <sys/stat.h>  // for stat()
+//#include <sys/types.h>
+#include <unistd.h> 
 
 namespace network
 {
@@ -23,7 +25,6 @@ using namespace network::httpd;
 
 bool HttpRequest::isAlready(const Buf& buf)
 {
-	LOGTRACE();
 	//LOGINFO(buf.toString());
 	const char* crlf = buf.findBytes("\r\n\r\n");
 	if (crlf != nullptr)
@@ -48,7 +49,6 @@ bool HttpRequest::isAlready(const Buf& buf)
 
 void HttpRequest::doRequest(Buf& buf)
 {
-	LOGTRACE();
 	std::string startLine = getOneLine(buf);
 	extractMethod(startLine);
 	buf.movePosOfRead(startLine.size() + 2);
@@ -63,7 +63,6 @@ void HttpRequest::doRequest(Buf& buf)
 /*unimplemented: PUT, DELETE */
 void HttpRequest::doMethod()
 {
-	LOGTRACE();
 	if (method == "GET")
 		methodGet();	
 	else if (method == "POST")
@@ -74,19 +73,16 @@ void HttpRequest::doMethod()
 
 bool HttpRequest::isDirectory(const PathStat& pathStat)
 {
-	LOGTRACE();
 	return S_ISDIR(pathStat.st_mode);
 }
 
 bool HttpRequest::isRegular(const PathStat& pathStat)
 {
-	LOGTRACE();
 	return S_ISREG(pathStat.st_mode);
 }
 
 bool HttpRequest::isCgi(const PathStat& pathStat)
 {
-	LOGTRACE();
 	if (pathStat.st_mode & S_IXUSR ||
 		pathStat.st_mode & S_IXGRP || pathStat.st_mode & S_IXOTH)
 		return true;
@@ -95,7 +91,6 @@ bool HttpRequest::isCgi(const PathStat& pathStat)
 
 bool HttpRequest::getFileInfo(const std::string& path, PathStat& pathStat)
 {
-	LOGTRACE();
 	bzero(&pathStat, sizeof(pathStat));
 	int ret = stat(path.c_str(), &pathStat);
 	if (ret < 0)
@@ -111,29 +106,26 @@ bool HttpRequest::getFileInfo(const std::string& path, PathStat& pathStat)
 
 void HttpRequest::handleError(const std::string& status, const std::string& msg) const 
 {
-	LOGTRACE();
 	HttpResponse response(conn);
+	LOGINFO(msg);
 	LOGERROR(errno);
 	response.sendStatusPage(status, msg);
 }
 
 std::string HttpRequest::getQueryStr(const std::string& urlIn)
 {
-	LOGTRACE();
 	std::string::size_type pos = urlIn.find("?");
 	return (pos == std::string::npos ? std::string() : urlIn.substr(pos+1));
 }
 
 std::string HttpRequest::getPath(const std::string& urlIn)
 {
-	LOGTRACE();
 	std::string::size_type pos = urlIn.find("?");
 	return (pos == std::string::npos ? urlIn : urlIn.substr(0, pos));
 }
 
 bool HttpRequest::closeWrapper(int fd)
 {
-	LOGTRACE();
 	if (::close(fd) < 0)
 	{
 		handleError("500", "Server internal error");
@@ -144,7 +136,6 @@ bool HttpRequest::closeWrapper(int fd)
 
 void HttpRequest::doCgi(const std::string& path)
 {
-	LOGTRACE();
 	int cgiIn[2], cgiOut[2];
 	pid_t retPid;
 	if (pipe(cgiIn) < 0 || pipe(cgiOut) < 0 || (retPid = fork()) < 0)
@@ -215,7 +206,6 @@ void HttpRequest::doCgi(const std::string& path)
 
 void HttpRequest::methodGet()
 {
-	LOGTRACE();
 	std::string path(basePath);	
 	CHECK(!url.empty() && url[0] == '/');
 	path.append(getPath(url));
@@ -242,7 +232,6 @@ void HttpRequest::methodGet()
 
 void HttpRequest::methodPost()
 {
-	LOGTRACE();
 	std::string path(basePath);	
 	CHECK(!url.empty() && url[0] == '/');
 	path.append(url);
@@ -258,14 +247,12 @@ void HttpRequest::methodPost()
 
 void HttpRequest::methodNull()
 {
-	LOGTRACE();
 	HttpResponse response(conn);
 	response.sendStatusPage("501", "Method unimplemented");
 }
 
 void HttpRequest::extractBody(Buf& buf)
 {
-	LOGTRACE();
 	body = buf.toString();
 	buf.reset();
 	unsigned long long length = std::stoull(headers[std::string("Content-Length")]);
@@ -274,7 +261,6 @@ void HttpRequest::extractBody(Buf& buf)
 
 void HttpRequest::extractHeader(Buf& buf)
 {
-	LOGTRACE();
 	const char* crlf = buf.findBytes("\r\n\r\n");
 	while (buf.addrOfRead() < crlf)
 	{
@@ -288,7 +274,6 @@ void HttpRequest::extractHeader(Buf& buf)
 
 std::pair<std::string, std::string> HttpRequest::getHeader(const std::string& line)
 {
-	LOGTRACE();
 	std::string::size_type pos = line.find(":");
 	CHECK(pos != std::string::npos);
 	std::string key = removeSpace(line.substr(0, pos));
@@ -298,7 +283,6 @@ std::pair<std::string, std::string> HttpRequest::getHeader(const std::string& li
 
 std::string HttpRequest::getOneLine(const Buf& buf)
 {
-	LOGTRACE();
 	const char* lineEnd = buf.findBytes("\r\n");
 	if (lineEnd != nullptr)
 	{
@@ -311,7 +295,6 @@ std::string HttpRequest::getOneLine(const Buf& buf)
 
 void HttpRequest::extractMethod(const std::string& line)
 {
-	LOGTRACE();
 	if (!line.empty())
 	{
 		std::vector<std::string> segments = sliceStrClearly(line, " ");

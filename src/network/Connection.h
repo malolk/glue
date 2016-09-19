@@ -7,6 +7,7 @@
 #include <network/EventChannel.h>
 #include <libbase/Noncopyable.h>
 #include <libbase/TimeStamp.h>
+#include <libbase/Debug.h>
 
 #include <functional>
 #include <memory>
@@ -27,12 +28,14 @@ enum
 
 typedef csocket::Socket SO;
 typedef network::ByteBuffer BUF;
-class Connection: private libbase::Noncopyable
+class Connection: private libbase::Noncopyable,
+				  public std::enable_shared_from_this<Connection>
 {
 public:
-	typedef std::function<void(BUF& )> CallbackOnRead;
+	typedef std::function<void(std::shared_ptr<Connection>&, BUF& )> CallbackOnRead;
 	//typedef std::function<void(BUF*)> CallbackOnWrite;
 	typedef std::function<void()> CallbackOnClose;
+	typedef std::function<void()> CallbackOnInit;
 
 	// default constructor is banded
 	Connection(int sockfd, poller::Epoll* ep)
@@ -46,19 +49,21 @@ public:
 
 	~Connection() 
 	{
-		LOGTRACE();
+		LOGWARN(std::string("Connection on fd: ") + std::to_string(sock.getSockfd()));
 	}
 
 	void setReadOperation(const CallbackOnRead& cb);
 	//void setWriteOperation(const CallbackOnWrite& cb);
 	void setCloseOperation(const CallbackOnClose& cb);
+	void setInitOperation(const CallbackOnInit& cb);
 	void sendData(BUF& data);
 	void sendDataInEpollThread(BUF& data);
 	void writeData();
 	void readData();
 	void close();
 	void shutdown();
-	void distroy(const std::shared_ptr<Connection>);
+	void shutdownNow();
+	void distroy(const std::shared_ptr<Connection>&);
 	void setKeepAlived() { keepAlived = true; }
 	bool isKeepAlived() const { return keepAlived; }
 	poller::Epoll* getEpollPtr() const { return epollPtr; } 
@@ -71,6 +76,7 @@ public:
 		// note: when and how to close the channel?, defer to the timeout design ^_^
 		channel.addIntoEpoll();
 		channel.enableReading();
+		if(initCb) initCb();
 	}
 	void setTimer();
 	void unsetTimer();
@@ -90,6 +96,7 @@ private:
 	BUF recvBuffer;
 	CallbackOnRead readCb;
 	CallbackOnClose closeCb;
+	CallbackOnInit initCb;
 };
 
 }

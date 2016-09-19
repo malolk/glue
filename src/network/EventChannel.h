@@ -49,9 +49,8 @@ public:
 		notifyOnRead(false)
 	{ }
 
-	~EventChannel() {
-		LOGTRACE();
-	}
+	~EventChannel() 
+	{ }
 
 	void setCallbackOnRead(const CallbackOnRead& cb) { cbRead = cb; }
 	void setCallbackOnWrite(const CallbackOnWrite& cb) { cbWrite = cb; }
@@ -67,15 +66,18 @@ public:
 
 	void addIntoEpoll();
 	void addedAlready();
+	void deleteInEpoll();
 	void enableAll();
 	void disableAll();
 	void enableReading();
 	void disableReading();
 	void enableWriting();
 	void disableWriting();
+	// is writing enabled?
 	bool isNotifyOnWrite() { return notifyOnWrite; }
+	// is reading enabled?
 	bool isNotifyOnRead() { return notifyOnRead; }
-	
+	bool isAdded() { return status == ADDED; }	
 	// note: need to check channel has been initialized
 	int getEventFlag() const { return eventFlag; }
 	int iofd() const { return ioFd; }

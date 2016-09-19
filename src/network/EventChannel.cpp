@@ -35,7 +35,6 @@ void EventChannel::handleError()
 {   
 	LOGWARN(std::string("channel error on fd: ") + std::to_string(ioFd));
 	handleClose();
-	// epollPtr->runLater(std::bind(&EventChannel::handleClose, this));
 }
    
 void EventChannel::handleClose()
@@ -48,11 +47,18 @@ void EventChannel::handleClose()
 
 void EventChannel::addIntoEpoll()
 {
+	if(status == ADDED) return;
 	CHECK(status == UNADDED);
 	CHECK(epollPtr);
 	CHECK(ioFd != -1);
 	status = ADDING;
 	epollPtr->runNowOrLater(std::bind(&Epoll::addChannel, epollPtr, this));
+}
+
+void EventChannel::deleteInEpoll()
+{
+	epollPtr->assertInEpollThread();
+	status = UNADDED;		
 }
 
 void EventChannel::addedAlready()
@@ -61,12 +67,44 @@ void EventChannel::addedAlready()
 	status = ADDED;
 }
 
-void EventChannel::enableReading() { enableRDWR_(true, EPOLLIN | EPOLLRDHUP); notifyOnRead = true; LOGINFO(""); }
-void EventChannel::disableReading() { enableRDWR_(false, EPOLLIN | EPOLLRDHUP); notifyOnRead = false; LOGINFO(""); }
-void EventChannel::enableWriting() { enableRDWR_(true, EPOLLOUT); notifyOnWrite = true; LOGINFO(""); }
-void EventChannel::disableWriting() { enableRDWR_(false, EPOLLOUT); notifyOnWrite = false; LOGINFO(""); }
-void EventChannel::enableAll() { enableRDWR_(true, EPOLLIN | EPOLLRDHUP | EPOLLOUT); notifyOnWrite = true; notifyOnRead = true; LOGINFO(""); }
-void EventChannel::disableAll() { enableRDWR_(false, EPOLLIN | EPOLLRDHUP | EPOLLOUT); notifyOnWrite = false; notifyOnRead = false; LOGINFO(""); }
+void EventChannel::enableReading() 
+{ 
+	enableRDWR_(true, EPOLLIN | EPOLLRDHUP); 
+	notifyOnRead = true; 
+}
+
+void EventChannel::disableReading() 
+{ 
+	enableRDWR_(false, EPOLLIN | EPOLLRDHUP); 
+	notifyOnRead = false; 
+}
+
+void EventChannel::enableWriting() 
+{ 
+	enableRDWR_(true, EPOLLOUT); 
+	notifyOnWrite = true; 
+}
+
+void EventChannel::disableWriting() 
+{ 
+	enableRDWR_(false, EPOLLOUT); 
+	notifyOnWrite = false; 
+}
+
+void EventChannel::enableAll() 
+{ 
+	enableRDWR_(true, EPOLLIN | EPOLLRDHUP | EPOLLOUT); 
+	notifyOnWrite = true; 
+	notifyOnRead = true; 
+}
+
+void EventChannel::disableAll() 
+{ 
+	enableRDWR_(false, EPOLLIN | EPOLLRDHUP | EPOLLOUT); 
+	notifyOnWrite = false; 
+	notifyOnRead = false; 
+}
+
 void EventChannel::enableRDWR_(bool flag, uint32_t setBit)
 {
 	CHECK(status == ADDING || status == ADDED);

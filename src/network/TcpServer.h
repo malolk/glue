@@ -20,7 +20,6 @@
 namespace network
 {
 
-
 void defaultReadOp(std::shared_ptr<SocketConnection::Connection>& conn, ByteBuffer& buf);
 class TcpServer: private libbase::Noncopyable
 {
@@ -28,10 +27,9 @@ public:
 	typedef std::function<void(std::shared_ptr<SocketConnection::Connection>&, ByteBuffer&)> CallbackOnReadOp;
 	explicit TcpServer(const std::string& ipStrIn, 
 			  uint16_t portIn = 8080,
-			  int threadSize = poller::WORKERSIZE + 1,
+			  int threadSize = poller::WORKERSIZE,
 			  CallbackOnReadOp readOpIn = defaultReadOp) : 
 		idleFd(-1),
-		dispatchId(0),
 		started(false),
 		port(portIn),
 		ipStr(ipStrIn),
@@ -39,7 +37,8 @@ public:
 		listenChannel(),
 		readOp(readOpIn),
 		threadNum(threadSize),
-		threadPool()
+		epollMasterPtr(NULL),
+		threadPool(threadSize)
 	{ }
 	
 	~TcpServer() {}
@@ -49,14 +48,11 @@ public:
 	void shutdown();
 
 private:
-	poller::Epoll* getNextEpoll();
 	void acceptConn();
-	void readConn(const CallbackOnReadOp&, const std::string&, ByteBuffer&);
 	void delConnection(const std::string&);
 	void delConnectionInEpoll(const std::string&);
 
 	int idleFd;
-	int dispatchId;
 	bool started;
 	const uint16_t port;
 	const std::string ipStr;
@@ -66,8 +62,8 @@ private:
 	std::map<std::string, std::shared_ptr<SocketConnection::Connection>> connCluster;
 	CallbackOnReadOp readOp;
 	const int threadNum;
+	poller::Epoll* epollMasterPtr;
 	poller::EpollThreadPool threadPool;
-	std::vector<poller::Epoll*> listOfEpollPtr;
 };
 }
 #endif
