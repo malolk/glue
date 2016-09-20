@@ -103,20 +103,26 @@ int Socket::accept(SocketAddress &sa)
 }
 
 
-int Socket::connect(const std::string &ipStr, uint16_t port)
+//int Socket::socket(int domainIn = AF_INET, int typeIn = SOCK_STREAM, int protocolIn = IPPROTO_IP)
+int Socket::allocate(int domainIn, int typeIn, int protocolIn)
 {
-	CHECK(!beServer && !connected);
+	int tmpFd  = -1;
+	tmpFd = ::socket(domainIn, typeIn, protocolIn);
+	CHECK(tmpFd >= 0);
+	return tmpFd;
+}
+
+int Socket::connect(const std::string& ipStr, uint16_t port, int fd)
+{
 	SocketAddress sa(ipStr, port);
-	int ret = 0;
-	ret = ::connect(sockfd, sa.getAddrTypeVoid(), sa.getAddrLength());
-	if (ret < 0)
+	int status = ::connect(fd, sa.getAddrTypeVoid(), sa.getAddrLength());
+	if (status < 0)
 	{
 		if (errno != EAGAIN)
 			LOGERROR(errno);
 		return -1;
 	}
-	setConnected();
-	return 0;	
+	return 0;
 }
 
 void Socket::getPeerName(SocketAddress& sa)

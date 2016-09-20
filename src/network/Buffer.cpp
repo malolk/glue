@@ -137,6 +137,7 @@ void ByteBuffer::appendBytes(const char* start, size_t size)
 {
     if (size > writableBytes())
         spareSpace(size);
+	CHECK((buf.size() - posOfWrite) >= size);
     std::copy(start, start + size, addrOfWrite());
     posOfWrite += size;
 }
@@ -169,6 +170,7 @@ void ByteBuffer::spareSpace(size_t size)
         buf.resize(posOfWrite + size);
         capacity = posOfWrite + size;
     }
+	CHECK(buf.size() == capacity);
 }
 
 void ByteBuffer::movePosOfWrite(size_t size)

@@ -44,7 +44,7 @@ public:
 	// beServerIn == true, then the socket would be a listen socket, 
 	// otherwise, it would be a common socket.
 	explicit Socket(bool beServerIn = false, int domainIn = AF_INET, int typeIn = SOCK_STREAM, int protocolIn = IPPROTO_IP):
-		sockfd(::socket(domainIn, typeIn, protocolIn))
+		sockfd(Socket::allocate(domainIn, typeIn, protocolIn))
 	{
 		commonCtor(beServerIn, false, domainIn, typeIn, protocolIn);
 	}
@@ -72,12 +72,13 @@ public:
 	
 	// should check the ret, EMFILE or ENFILE ?
 	int accept(SocketAddress &sa);
-	int connect(const std::string &ipStr, uint16_t port);
 	int getSockfd() { return sockfd; }
 	void getPeerName(SocketAddress &sa);
 	void getSockName(SocketAddress &sa);
     ssize_t recvBytes(ByteBuffer& buf);
     ssize_t sendBytes(ByteBuffer& buf);
+	static int connect(const std::string&, uint16_t, int );
+	static int allocate(int domainIn = AF_INET, int typeIn = SOCK_STREAM, int protocolIn = IPPROTO_IP);
 	void enableAddrReuse(int flag)
 	{
 		CHECK(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, static_cast<void *>(&flag), sizeof flag) == 0);

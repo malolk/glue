@@ -34,8 +34,8 @@ class Connection: private libbase::Noncopyable,
 public:
 	typedef std::function<void(std::shared_ptr<Connection>&, BUF& )> CallbackOnRead;
 	//typedef std::function<void(BUF*)> CallbackOnWrite;
+	typedef std::function<void(std::shared_ptr<Connection>&)> CallbackOnInit;
 	typedef std::function<void()> CallbackOnClose;
-	typedef std::function<void()> CallbackOnInit;
 
 	// default constructor is banded
 	Connection(int sockfd, poller::Epoll* ep)
@@ -46,7 +46,7 @@ public:
 		keepAlived(false),
 		timerSet(false)
 	{ }
-
+	
 	~Connection() 
 	{
 		LOGWARN(std::string("Connection on fd: ") + std::to_string(sock.getSockfd()));
@@ -62,7 +62,7 @@ public:
 	void readData();
 	void close();
 	void shutdown();
-	void shutdownNow();
+	void shutdownNow(const std::shared_ptr<Connection>&);
 	void distroy(const std::shared_ptr<Connection>&);
 	void setKeepAlived() { keepAlived = true; }
 	bool isKeepAlived() const { return keepAlived; }
@@ -76,7 +76,11 @@ public:
 		// note: when and how to close the channel?, defer to the timeout design ^_^
 		channel.addIntoEpoll();
 		channel.enableReading();
-		if(initCb) initCb();
+		if(initCb) 
+		{
+			std::shared_ptr<Connection> tmpPtr = shared_from_this();	
+			initCb(tmpPtr);
+		}
 	}
 	void setTimer();
 	void unsetTimer();

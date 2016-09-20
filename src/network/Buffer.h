@@ -15,8 +15,8 @@ extern const size_t BUF_INIT_CAPACITY;
 class ByteBuffer 
 {
 public:
-    explicit ByteBuffer(size_t cap = BUF_INIT_CAPACITY):
-        capacity(cap), 
+    explicit ByteBuffer(size_t capIn = BUF_INIT_CAPACITY):
+        capacity(capIn), 
 		posOfRead(0), 
 		posOfWrite(0)
     {
@@ -50,6 +50,9 @@ public:
 	int readFd(int fd);
 	int writeFd(int fd);
 	std::string toString() const;
+	size_t cap() const { return capacity; }
+	size_t readPos() const { return posOfRead; }
+	size_t writePos() const { return posOfWrite; }
 private:
     void spareSpace(size_t );
     std::vector<char> buf;

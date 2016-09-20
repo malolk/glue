@@ -27,8 +27,8 @@ public:
 		  port(portIn), 
 		  retry(retryIn), 
 		  connected(false),
-		  mu(),
-		  sock(false) 
+		  fd(csocket::Socket::allocate(AF_INET, SOCK_STREAM, IPPROTO_IP)),
+		  mu()
 	{ }
 	
 	explicit TcpClient(const csocket::SocketAddress& srvAddr, bool retryIn = true)
@@ -36,8 +36,8 @@ public:
 		  port(srvAddr.getPort()), 
 		  retry(retryIn), 
 		  connected(false),
-		  mu(),
-		  sock(false) 
+		  fd(csocket::Socket::allocate(AF_INET, SOCK_STREAM, IPPROTO_IP)),
+		  mu() 
 	{ }
 
 	~TcpClient() {}
@@ -51,8 +51,8 @@ public:
 	bool isConnected() { return connected; }	
 private:
 	
+	void startInEpoll();
 	int tryConnect();
-	void initConn(const CallbackOnInitOp&);
 	void delConnection();
 	void delConnectionInEpoll();
 	void stopInEpoll();
@@ -61,8 +61,8 @@ private:
 	uint16_t port;
 	bool retry;
 	bool connected;	
+	int fd;
 	libbase::MutexLock mu;
-	csocket::Socket sock;
 	std::shared_ptr<SocketConnection::Connection> conn;
 	CallbackOnInitOp initOp;
 	CallbackOnReadOp readOp;

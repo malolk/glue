@@ -32,21 +32,21 @@ int TcpClient::tryConnect()
 	{
 		for(int i = 0; i < RETRY_LIMIT; ++i)
 		{
-			ret = sock.connect(srvIp, port);
+			ret = csocket::Socket::connect(srvIp, port, fd);
 			if(ret == 0) break;
 		}			
 	}
 	else 
-		ret = sock.connect(srvIp, port);
+		ret = csocket::Socket::connect(srvIp, port, fd);
 	return ret;	
 }
 
-void TcpClient::initConn(const TcpClient::CallbackOnInitOp& initOpIn)
+void TcpClient::start()
 {
-	initOpIn(conn);	
+	epollPtr->runNowOrLater(std::bind(&TcpClient::startInEpoll, this));
 }
 
-void TcpClient::start()
+void TcpClient::startInEpoll()
 {
 	CHECK(initOp && readOp && epollPtr);
 	if(tryConnect()) 
@@ -54,18 +54,18 @@ void TcpClient::start()
 		LOGWARN("connect error");
 		return;
 	}
-	connected = true;
-	conn = std::make_shared<Connection>(sock.getSockfd(), epollPtr);
+	conn = std::make_shared<Connection>(fd, epollPtr);
 	conn->setReadOperation(readOp);
-	conn->setInitOperation(std::bind(&TcpClient::initConn, this, initOp));
+	conn->setInitOperation(initOp);
 	conn->setCloseOperation(std::bind(&TcpClient::delConnection, this));
 	conn->initiateChannel();		
+	connected = true;
 }
 
 // for connection closed by peer end
 void TcpClient::delConnection()
 {
-	epollPtr->runNowOrLater(std::bind(&TcpClient::delConnectionInEpoll, this));		
+	epollPtr->runLater(std::bind(&TcpClient::delConnectionInEpoll, this));		
 }
 
 void TcpClient::delConnectionInEpoll()
@@ -83,7 +83,7 @@ void TcpClient::delConnectionInEpoll()
 // for connection closed by client actively
 void TcpClient::stop()
 {
-	epollPtr->runNowOrLater(std::bind(&TcpClient::stopInEpoll, this));	
+	epollPtr->runLater(std::bind(&TcpClient::stopInEpoll, this));	
 }
 
 void TcpClient::stopInEpoll()
@@ -95,7 +95,7 @@ void TcpClient::stopInEpoll()
 		connPtrTmp = conn;
 		conn.reset();				
 	}
-	epollPtr->runNowOrLater(std::bind(&Connection::shutdownNow, connPtrTmp.get()));		
+	epollPtr->runNowOrLater(std::bind(&Connection::shutdownNow, connPtrTmp.get(), connPtrTmp));		
 }
 
 

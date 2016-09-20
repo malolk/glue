@@ -1,4 +1,8 @@
 add_executable(TestEventProcessTime TestEventProcessTime.cpp)
 target_link_libraries(TestEventProcessTime glue_network)
 
+add_executable(TestThroughputClient TestThroughputClient.cpp)
+target_link_libraries(TestThroughputClient glue_network)
 
+add_executable(TestThroughputServer TestThroughputServer.cpp)
+target_link_libraries(TestThroughputServer glue_network)

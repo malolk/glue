@@ -39,13 +39,14 @@ void Epoll::delTimer(Timer* timerAgent)
 
 void Epoll::stop()
 {
-	runNowOrLater(std::bind(&Epoll::stopInEpoll, this));	
+	runLater(std::bind(&Epoll::stopInEpoll, this));	
 }
 
 void Epoll::stopInEpoll()
 {
 	assertInEpollThread();
 	running = false;      
+	wakeup();
 }
 
 void Epoll::epollClose()

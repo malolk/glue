@@ -69,7 +69,7 @@ void Connection::sendDataInEpollThread(BUF& data)
 		if (sentBytes == WRERR)
 		{
 			state = CLOSED;
-			epollPtr->runNowOrLater(std::bind(&EventChannel::handleClose, &channel));
+			epollPtr->runLater(std::bind(&EventChannel::handleClose, &channel));
 			return;
 		}
 		if (static_cast<size_t>(sentBytes) == sendableBytes)
@@ -83,8 +83,9 @@ void Connection::sendDataInEpollThread(BUF& data)
 	
 	if(sendableBytes > static_cast<size_t>(sentBytes))
 	{
-		sendBuffer.appendBytes(data.addrOfRead() + sentBytes, sendableBytes - sentBytes);
-		data.movePosOfRead(sendableBytes);
+
+		sendBuffer.appendBytes(data.addrOfRead(), sendableBytes - sentBytes);
+		data.movePosOfRead(sendableBytes - sentBytes);
 		if (!channel.isNotifyOnWrite())
 			channel.enableWriting();
 	}
@@ -96,7 +97,7 @@ void Connection::writeData()
 	if (sentBytes == WRERR)
 	{
 		state = CLOSED;
-		epollPtr->runNowOrLater(std::bind(&EventChannel::handleClose, &channel));
+		epollPtr->runLater(std::bind(&EventChannel::handleClose, &channel));
 		return;
 	}
 	sendBuffer.movePosOfRead(sentBytes);
@@ -121,12 +122,12 @@ void Connection::readData()
 	else if (recvBytes == 0)
 	{
 		state = CLOSED;
-		epollPtr->runNowOrLater(std::bind(&EventChannel::handleClose, &channel));
+		epollPtr->runLater(std::bind(&EventChannel::handleClose, &channel));
 	}	
 	else
 	{
 		state = CLOSED; 
-		epollPtr->runNowOrLater(std::bind(&EventChannel::handleClose, &channel));
+		epollPtr->runLater(std::bind(&EventChannel::handleClose, &channel));
 		LOGWARN("readData error");
 	}
 }
@@ -146,7 +147,7 @@ void Connection::distroy(const std::shared_ptr<Connection>& conn)
 	epollPtr->delChannel(&channel);
 }
 
-void Connection::shutdownNow()
+void Connection::shutdownNow(const std::shared_ptr<Connection>& conn)
 {
 	state = CLOSED;
 	channel.disableAll();
@@ -163,6 +164,7 @@ void Connection::shutdown()
 void Connection::stopWrite()
 {
 	CHECK(state == CLOSING);
+	channel.disableWriting();
 	if (!channel.isNotifyOnWrite())
 		sock.stopWrite();
 }

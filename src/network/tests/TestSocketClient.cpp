@@ -19,7 +19,7 @@ int main()
 		clientSocket.enableAddrReuse(1);
 		clientSocket.enablePortReuse(1);
 		clientSocket.enableNonBlock(0);
-		clientSocket.connect("127.0.0.1", 8080);
+		clientSocket.connect("127.0.0.1", 8080, clientSocket.getSockfd());
 		sleep(5);
 		clientSocket.getSockName(sa);
 		LOGINFO("\n\n\nconnect normally");

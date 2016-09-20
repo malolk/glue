@@ -101,6 +101,7 @@ void TcpServer::acceptConn()
 				::close(tmpFd);
 				idleFd = ::open(pathOfIdleFd, O_CLOEXEC | O_NONBLOCK); 
 				CHECK(idleFd >= 0);
+				LOGWARN("no enough fd");
 				return;
 			}
 			else
@@ -115,7 +116,7 @@ void TcpServer::acceptConn()
 
 void TcpServer::delConnection(const std::string& key)
 {
-	epollMasterPtr->runNowOrLater(std::bind(&TcpServer::delConnectionInEpoll, this, key));
+	epollMasterPtr->runLater(std::bind(&TcpServer::delConnectionInEpoll, this, key));
 }
 
 void TcpServer::delConnectionInEpoll(const std::string& key)
