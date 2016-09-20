@@ -1,7 +1,7 @@
 Glue
 =====
 
-A c++ network library for personal use.
+A C++ network library implemented in reactor pattern.
 
 ## Purpose
 
@@ -21,7 +21,7 @@ The project Glue is built for three reasons:
 
 * Linux(Version 2.6.8+)
 * cmake(Version 2.6+)
-* g++(Version 4.8.1+) support C++11 
+* g++(Version 4.8.1+) supporting C++11 
 
 ## Compile and run
 
@@ -30,7 +30,9 @@ The project Glue is built for three reasons:
 ```
 INSTALL_DIR=<the header and library install path that you specify> ./build.sh
 
-Note: Headers and static library will be installed into **release-install** directory in default while you didn't specify any install directory.
+Note: INSTALL_DIR should be absolute path. When no install directory specified, 
+Headers would be installed into source_dir/include, while static libraries would
+be installed into source_dir/lib.
 ```
 
 - specify build type(debug or release)
@@ -44,5 +46,6 @@ Note: Build type is release when not specified
 - executable files
 
 ```
-The executable files of tests for the library could be found in directory build/release(debug)/bin
+The executable files of tests for the library could be found in directory source_dir/bin
 ```
+
