@@ -76,7 +76,9 @@ The executable files of tests for the library could be found in directory source
 ## Demo
 
 ```
-In directory **demo**, one echo-server and one echo-client implemented using glue, and compile options had been written down on the Makefile. Like this:
-	g++ -std=c++0x -pthread your-program.cpp -I<the include path for glue> -L<the static library path for glue> -lglue_network -lglue_libbase -o target 
+In directory **demo**, one echo-server and one echo-client implemented using glue, and 
+compile options had been written down on the Makefile. Like this:
+	g++ -std=c++0x -pthread your-program.cpp -I<the include path for glue>    \
+	-L<the static library path for glue> -lglue_network -lglue_libbase -o target 
 ```
 
