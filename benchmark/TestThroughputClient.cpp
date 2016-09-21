@@ -55,7 +55,6 @@ ByteBuffer& buf)
 	LOGTRACE();
 	recvBytes += buf.readableBytes();
 	conn->sendData(buf);	
-	buf.reset();
 	LOGTRACE();
 }
 
@@ -140,7 +139,7 @@ private:
 			sum += cliCluster[index]->getSentBytesNum();
 		std::cout << "Running Time=" << timeInSecs 
 		<< " " << "Received Bytes="<< sum 
-		<< " " << "Throughput="<< (static_cast<double>(sum)/static_cast<double>(1024 * timeInSecs)) << " KiB/s" << std::endl;
+		<< " " << "Throughput="<< (static_cast<double>(sum)/static_cast<double>(1024 * 1024 * timeInSecs)) << " MiB/s" << std::endl;
 	}
 	csocket::SocketAddress srvAddr;
 	std::vector<std::unique_ptr<Client>> cliCluster;

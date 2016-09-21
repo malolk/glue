@@ -23,6 +23,8 @@ public:
         buf.resize(capacity, 0);
     }
 
+	//fix move constructor
+	
     ~ByteBuffer() {}
 
     // could make it const?

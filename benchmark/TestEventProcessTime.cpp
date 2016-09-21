@@ -74,14 +74,14 @@ void RunOnce()
 
 	TimeStamp end;
 	
-	std::cout << start.diffInMicroSecond(before) << std::endl; 
-	std::cout << end.diffInMicroSecond(start) << std::endl; 
+//	std::cout << start.diffInMicroSecond(before) << " " 
+    std::cout << end.diffInMicroSecond(start) << std::endl; 
 }
 
 int main(int argc, char* argv[])
 {
 	num_pipes = 100;
-	num_actives = 1;
+	num_actives = 1000;
 	num_writes = 100;
 	
 	int test_cnt = 25;

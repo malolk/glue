@@ -54,9 +54,9 @@ void Connection::setCloseOperation(const CallbackOnClose& cb)
 
 void Connection::sendData(BUF& data)
 {
-	// io operation in single thread, safe
+	// io operation in single thread, safe, std::ref avoid copy when binding
 	epollPtr->runNowOrLater(std::bind(&Connection::sendDataInEpollThread,
-	this, data));
+	this, std::ref(data)));
 }
 
 void Connection::sendDataInEpollThread(BUF& data)
@@ -83,12 +83,12 @@ void Connection::sendDataInEpollThread(BUF& data)
 	
 	if(sendableBytes > static_cast<size_t>(sentBytes))
 	{
-
 		sendBuffer.appendBytes(data.addrOfRead(), sendableBytes - sentBytes);
 		data.movePosOfRead(sendableBytes - sentBytes);
 		if (!channel.isNotifyOnWrite())
 			channel.enableWriting();
 	}
+
 }
 
 void Connection::writeData()
