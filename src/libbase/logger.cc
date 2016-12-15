@@ -139,8 +139,8 @@ void Logger::Log(int level, const char* file, int line, const char* func,
   }
   char* msg_ptr = p;
   if (state) {
-    char* tail = msg_ptr + size;
-    *(tail + 1) = ' ';
+    char* tail = msg_ptr + size - 1; 
+    *(tail + 1) = ' '; /* Change the null-terminator to the space char. */
     strcat(tail + 1, state);
   }
 
