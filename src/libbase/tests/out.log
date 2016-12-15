@@ -1,7 +1,0 @@
-[INFO ] 2016-12-15 10:50:09.114863 string_util_test.cc:17   Print() @Thread[17870] Whole string = AAAAAA dlimiter =   no_space: 0 Slice contents: 
-[INFO ] 2016-12-15 10:50:09.115059 string_util_test.cc:17   Print() @Thread[17870] Whole string = AAAAAA dlimiter = A no_space: 0 Slice contents: AAAAAA_#_A_#_AAAA_#_AAAA_#_A_#_AA_#_AA_#_A
-[INFO ] 2016-12-15 10:50:09.115099 string_util_test.cc:17   Print() @Thread[17870] Whole string = AAAAAA dlimiter = B no_space: 0 Slice contents: 
-[INFO ] 2016-12-15 10:50:09.115144 string_util_test.cc:17   Print() @Thread[17870] Whole string = d AA d  AA d  AA d  dlimiter = d no_space: 0 Slice contents: d AA d  AA d  AA d _#_d AA _#_  AA d  AA d _#_  AA _#_  AA d _#_  AA _#_ 
-[INFO ] 2016-12-15 10:50:09.115221 string_util_test.cc:17   Print() @Thread[17870] Whole string =  d AA d  AA d  AA d  dlimiter = d no_space: 1 Slice contents: AA d  AA d  AA d_#_AA_#_AA d  AA d_#_AA_#_AA d_#_AA
-[INFO ] 2016-12-15 10:50:09.115249 string_util_test.cc:32   TestNumStr() @Thread[17870] It's a num string: 123456
-[INFO ] 2016-12-15 10:50:09.115273 string_util_test.cc:34   TestNumStr() @Thread[17870] It's not a num string: Non
