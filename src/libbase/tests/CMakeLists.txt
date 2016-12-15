@@ -1,21 +1,21 @@
-add_executable(TestDebug TestDebug.cpp)
-target_link_libraries(TestDebug glue_libbase)
+add_executable(logger_test logger_test.cc)
+target_link_libraries(logger_test glue_libbase)
 
-add_executable(TestTime TestTime.cpp)
-target_link_libraries(TestTime glue_libbase)
+add_executable(timeutil_test timeutil_test.cc)
+target_link_libraries(timeutil_test glue_libbase)
 
-add_executable(TestBoundedBlockingQueue TestBoundedBlockingQueue.cpp)
-target_link_libraries(TestBoundedBlockingQueue glue_libbase)
+add_executable(bounded_blocking_queue_test bounded_blocking_queue_test.cc)
+target_link_libraries(bounded_blocking_queue_test glue_libbase)
 
-add_executable(TestBoundedPriorityQueue TestBoundedPriorityQueue.cpp)
-target_link_libraries(TestBoundedPriorityQueue glue_libbase)
+add_executable(heap_test heap_test.cc)
+target_link_libraries(heap_test glue_libbase)
 
-add_executable(TestHeap TestHeap.cpp)
-target_link_libraries(TestHeap glue_libbase)
+add_executable(thread_test thread_test.cc)
+target_link_libraries(thread_test glue_libbase)
 
-add_executable(TestThreadPool TestThreadPool.cpp)
-target_link_libraries(TestThreadPool glue_libbase)
+add_executable(threadpool_test threadpool_test.cc)
+target_link_libraries(threadpool_test glue_libbase)
 
-add_executable(TestWaitMember TestWaitMember.cpp)
-target_link_libraries(TestWaitMember glue_libbase)
+add_executable(waitmember_test waitmember_test.cc)
+target_link_libraries(waitmember_test glue_libbase)
 

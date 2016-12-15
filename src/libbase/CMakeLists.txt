@@ -1,4 +1,4 @@
-file(GLOB libbase_SRCS "*.cpp")
+file(GLOB libbase_SRCS "*.cc")
 
 add_library(glue_libbase ${libbase_SRCS})
 target_link_libraries(glue_libbase pthread rt)
