@@ -3,7 +3,7 @@
 
 #include <string>
 
-int main() {
+void TestIpv4() {
   using namespace glue_network;
   int fd = Socket::NewSocket();
   Socket::EnableNonBlock(fd, 0);
@@ -40,3 +40,48 @@ int main() {
     }
   }	
 }
+
+void TestIpv6() {
+  using namespace glue_network;
+  int fd = Socket::NewSocket(AF_INET6, SOCK_STREAM, 0);
+  Socket::EnableNonBlock(fd, 0);
+  Socket::EnableAddrReuse(fd, 1);
+  Socket::EnablePortReuse(fd, 1);
+  SocketAddress server_addr("::1", 8080, 1);
+  Socket::BindAndListen(fd, server_addr, 100);
+
+  LOG_INFO("Listen on %s ...", server_addr.ToString().c_str());
+  while (true) {
+    SocketAddress client_addr;
+    int cli_fd = Socket::Accept(fd, client_addr);
+    if (cli_fd >= 0) {
+      LOG_INFO("Receive Connect from client: %s ", client_addr.ToString().c_str());
+      Socket::EnableNonBlock(cli_fd, 0);
+      Socket::GetPeerName(cli_fd, client_addr);
+      ByteBuffer buf;
+      while (true) {
+        ssize_t read_num = Socket::Receive(cli_fd, buf);  
+        if (read_num == 0) {
+          Socket::Close(cli_fd);
+          LOG_INFO("peer: %s closed", client_addr.ToString().c_str());
+          break;
+        } else if (read_num > 0) {
+          LOG_INFO("Received data from peer: %s ", buf.ToString().c_str());
+          Socket::Send(cli_fd, buf);
+        } else {
+          Socket::Close(cli_fd);
+          LOG_ERROR("Error on receiving from peer : %s on sockfd=%d ", client_addr.ToString().c_str(), cli_fd);
+          break;
+        }
+        buf.Reset();
+      }
+    }
+  }	
+}
+
+int main() {
+  TestIpv6();
+
+  return 0;
+}
+

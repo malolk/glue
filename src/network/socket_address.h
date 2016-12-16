@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <string.h>
 
 namespace glue_network {
 
@@ -36,14 +37,24 @@ class SocketAddress {
   SocketAddress(const AddrType6& addr): addr_(*(AddrType*)(&addr)) {
   }
 
-  /* TODO: Support IPv6 ip_str. */
-  SocketAddress(const std::string& ip_str, uint16_t port) {
-	AddrType4 addr4;
-	addr4.sin_family = AF_INET;
-	addr4.sin_port = htons(port);
-	inet_pton(AF_INET, ip_str.c_str(), &(addr4.sin_addr));
-	addr_ = *(AddrType*)(&addr4);
-	LOG_CHECK(addr_.ss_family == AF_INET, "");
+  SocketAddress(const std::string& ip_str, uint16_t port, bool is_ipv6 = false) {
+    memset(&addr_, 0, sizeof(addr_));
+    if (!is_ipv6) {
+	  AddrType4 addr4;
+	  addr4.sin_family = AF_INET;
+	  addr4.sin_port = htons(port);
+	  inet_pton(AF_INET, ip_str.c_str(), &(addr4.sin_addr));
+	  addr_ = *(AddrType*)(&addr4);
+	  LOG_CHECK(addr_.ss_family == AF_INET, "");
+    } else {
+      AddrType6 addr6;
+      addr6.sin6_family = AF_INET6;
+      addr6.sin6_port = htons(port);
+      inet_pton(AF_INET6, ip_str.c_str(), &(addr6.sin6_addr));
+      LOG_CHECK(sizeof(addr_) >= sizeof(addr6), "");
+      addr_= *(AddrType*)(&addr6);
+      LOG_CHECK(addr_.ss_family == AF_INET6, "");
+    }
   }
 
   ~SocketAddress() {
@@ -54,7 +65,7 @@ class SocketAddress {
 	uint16_t ret = 0;
 	if (addr_.ss_family == AF_INET) {
 	  AddrType4 *addr4 = (AddrType4*)(&addr_);
-	  ret = ntohs(addr4->sin_port);	
+	  ret = ntohs(addr4->sin_port);
 	} else if (addr_.ss_family == AF_INET6) {
 	  AddrType6 *addr6 = (AddrType6*)(&addr_);
 	  ret = ntohs(addr6->sin6_port);	
@@ -80,7 +91,7 @@ class SocketAddress {
 
   const AddrTypeVoid* ToAddrTypeVoid() const {
 	LOG_CHECK(addr_.ss_family == AF_INET || addr_.ss_family == AF_INET6, "");
-	return (AddrTypeVoid*)(&addr_);	
+	return (const AddrTypeVoid*)(&addr_);	
   }
 
   const AddrType4* ToAddrType4() const {
