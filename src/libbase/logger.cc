@@ -46,7 +46,7 @@ Logger::~Logger() {
 int Logger::SetValue(const std::string& key, const std::string& value) {
   int ret = 1;
   if ("logfile" == key) {
-    file_ = fopen(value.c_str(), "w+");
+    file_ = fopen(value.c_str(), "a+");
     if (!file_) ret = 0;
   } else if ("level" == key) {
     level_ = static_cast<LevelType>(atoi(value.c_str()));
@@ -146,7 +146,7 @@ void Logger::Log(int level, const char* file, int line, const char* func,
 
   /* Write whole log */
   char base_buf[LOG_BASE_SIZE] = {'\0'};
-  int thread_id = tid();
+  int thread_id = ThreadId();
   p = base_buf;
   len = sizeof(base_buf);
    

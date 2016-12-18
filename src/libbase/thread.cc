@@ -13,7 +13,7 @@ namespace glue_libbase_thread {
   }
 } // namespace glue_libbase_thread
 
-pid_t tid() {
+pid_t ThreadId() {
   if (0 == glue_libbase_thread::cached_tid) {
     glue_libbase_thread::cached_tid = glue_libbase_thread::GetTid();
   }
@@ -24,13 +24,13 @@ namespace {
 /* Fork safe */
 void AfterFork() {
   glue_libbase_thread::cached_tid = 0;
-  tid();
+  ThreadId();
 }
 
 class ThreadIdInitializer {
  public:
   ThreadIdInitializer() {
-    tid();
+    ThreadId();
     pthread_atfork(NULL, NULL, &AfterFork);
   }
 };
@@ -92,7 +92,7 @@ int Thread::Stop() {
 
 /* TODO: some optimizations should be taken to avoid copying functors */
 void Thread::Run() {
-  process_id_ = tid();
+  process_id_ = ThreadId();
   {
     MutexLockGuard m(mu_);
     running_ = true;

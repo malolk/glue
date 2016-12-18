@@ -28,7 +28,7 @@
 namespace glue_libbase {
 
 /* Get pid of current thread. */
-pid_t tid();
+pid_t ThreadId();
 
 class Thread: private Noncopyable {
  public:
