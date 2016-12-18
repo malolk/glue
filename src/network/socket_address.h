@@ -117,7 +117,10 @@ class SocketAddress {
   uint16_t Family() const {
 	return addr_.ss_family;	
   }
-	
+
+  void Clear() {
+    memset(&addr_, 0, sizeof(addr_));
+  }
   std::string ToString() const {
 	uint16_t port = Port();
 	std::string ip_str = IpStr();

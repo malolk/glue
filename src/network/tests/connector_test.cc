@@ -38,7 +38,7 @@ void TestIpv6(const char* ip_str, uint16_t port) {
 }
 
 int main() {
-//  TestIpv4("127.0.0.1", 8080);
-  TestIpv6("::1", 8080);
+  TestIpv4("127.0.0.1", 8080);
+  // TestIpv6("::1", 8080);
   return 0;
 }

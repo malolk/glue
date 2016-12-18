@@ -15,11 +15,10 @@ void TestIpv4() {
   LOG_INFO("Listen on %s ...", server_addr.ToString().c_str());
   while (true) {
     SocketAddress client_addr;
-    int cli_fd = Socket::Accept(fd, client_addr);
+    int cli_fd = Socket::Accept(fd, &client_addr);
+    Socket::EnableNonBlock(cli_fd, 0); // Blocking I/O
     if (cli_fd >= 0) {
       LOG_INFO("Receive Connect from client: %s ", client_addr.ToString().c_str());
-      Socket::EnableNonBlock(cli_fd, 0);
-      Socket::GetPeerName(cli_fd, client_addr);
       ByteBuffer buf;
       while (true) {
         ssize_t read_num = Socket::Receive(cli_fd, buf);  
@@ -53,11 +52,10 @@ void TestIpv6() {
   LOG_INFO("Listen on %s ...", server_addr.ToString().c_str());
   while (true) {
     SocketAddress client_addr;
-    int cli_fd = Socket::Accept(fd, client_addr);
+    int cli_fd = Socket::Accept(fd, &client_addr);
+    Socket::EnableNonBlock(cli_fd, 0); // Blocking I/O
     if (cli_fd >= 0) {
       LOG_INFO("Receive Connect from client: %s ", client_addr.ToString().c_str());
-      Socket::EnableNonBlock(cli_fd, 0);
-      Socket::GetPeerName(cli_fd, client_addr);
       ByteBuffer buf;
       while (true) {
         ssize_t read_num = Socket::Receive(cli_fd, buf);  
@@ -69,9 +67,11 @@ void TestIpv6() {
           LOG_INFO("Received data from peer: %s ", buf.ToString().c_str());
           Socket::Send(cli_fd, buf);
         } else {
-          Socket::Close(cli_fd);
           LOG_ERROR("Error on receiving from peer : %s on sockfd=%d ", client_addr.ToString().c_str(), cli_fd);
-          break;
+          if (read_num != Socket::kNODATA) {
+            Socket::Close(cli_fd);
+            break;
+          }
         }
         buf.Reset();
       }
@@ -80,7 +80,7 @@ void TestIpv6() {
 }
 
 int main() {
-  TestIpv6();
+  TestIpv4();
 
   return 0;
 }

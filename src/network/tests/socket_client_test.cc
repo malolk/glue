@@ -62,7 +62,7 @@ void TestIpv4() {
 }
 
 int main() {
-  TestIpv6();
+  TestIpv4();
   
   return 0;
 }

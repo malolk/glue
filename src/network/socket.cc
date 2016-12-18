@@ -58,16 +58,20 @@ void Socket::BindAndListen(int sockfd, const SocketAddress& sa, int backlog) {
   }
 }
 
-int Socket::Accept(int sockfd, SocketAddress &sa) {
+int Socket::Accept(int sockfd, SocketAddress *sa) {
   socklen_t addr_len = sizeof(SocketAddress::AddrType);
-  int ret = ::accept4(sockfd, sa.ToAddrTypeVoid(), &addr_len, SOCK_NONBLOCK | SOCK_CLOEXEC);
+  int ret = 0;
+  if (sa) { 
+    ret = ::accept4(sockfd, sa->ToAddrTypeVoid(), &addr_len, SOCK_NONBLOCK | SOCK_CLOEXEC);
+  } else {
+    ret = ::accept4(sockfd, NULL, NULL, SOCK_NONBLOCK | SOCK_CLOEXEC);
+  }
   if (ret < 0) {
 	int err = errno;
 	switch (err) {
 	  case EAGAIN:
       case EINTR: {
-        LOG_WARN("accept4(), EINTR, try again.");
-        return kRETRY; /* Try again! */
+        return kRETRY; /* It's ok for non-blocking I/O. Try again later. */
       }
 	  case EMFILE:
 	  case ENFILE: {

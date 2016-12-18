@@ -44,11 +44,20 @@ class Acceptor : private glue_libbase::Noncopyable {
     if (cli_fd >= 0) {
       return cli_fd;
     } else {
-      LOG_WARN("Acceptor::Accept() failed");
-      /* TODO: Maybe there is no enough file descriptors, then free some backup fds. */
-      return -1;
+      if (cli_fd == Socket::kRETRY) {
+        return cli_fd;
+      } else {
+        LOG_ERROR("Acceptor::Accept() failed");
+        /* TODO: Maybe there is no enough file descriptors, then free some backup fds. */
+        return Socket::kERROR;
+      }
     }
   }
+
+  int Fd() const {
+    return listen_fd_;
+  }
+
   ~Acceptor() {
     Socket::Close(listen_fd_);
   }

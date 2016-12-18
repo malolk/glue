@@ -33,7 +33,7 @@ class Socket {
   static void GetPeerName(int sockfd, SocketAddress &sa);
   static void GetSockName(int sockfd, SocketAddress &sa);
 
-  static int Accept(int sockfd, SocketAddress &sa);
+  static int Accept(int sockfd, SocketAddress *sa);
   static int Connect(int sockfd, const SocketAddress& addr);
 
   static void Close(int sockfd);
