@@ -27,8 +27,8 @@ class Epoll: private glue_libbase::Noncopyable {
  public:
   typedef std::function<void()> CallbackType;
   Epoll()
-    : epoll_fd_(-1), wakeup_fd_(-1), wakeup_chann_(this),
-	  process_id_(-1), running_(false), is_handling_events_(false), 
+    : epoll_fd_(-1), wakeup_fd_(-1), process_id_(-1), 
+      wakeup_chann_(this), running_(false), is_handling_events_(false), 
       events_(default_event_num_) { 
   }
 
@@ -62,8 +62,8 @@ class Epoll: private glue_libbase::Noncopyable {
 
   int epoll_fd_;		
   int wakeup_fd_;
-  EventChannel wakeup_chann_;	
   pid_t process_id_;
+  EventChannel wakeup_chann_;	
   std::atomic<bool> running_;
   std::atomic<bool> is_handling_events_;
   std::vector<struct epoll_event> events_; 
@@ -71,7 +71,7 @@ class Epoll: private glue_libbase::Noncopyable {
   std::unordered_set<EventChannel*> channels_;
   glue_libbase::MutexLock mu_;
 
-  static const default_event_num_;
+  static const size_t default_event_num_;
 };	
 } // namespace glue_network
 #endif // GLUE_NETWORK_EPOLL_H_

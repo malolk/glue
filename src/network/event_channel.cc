@@ -4,94 +4,106 @@
 
 namespace glue_network {  
 void EventChannel::HandleRead() {  
-  epoll_ptr_->MustInEpollThread();
+  epoll_ptr_->MustInLoopThread();
   if (read_cb_) {
 	read_cb_();
+  } else {
+#ifndef NDBUG
+    LOG_WARN("Read events occured, but read_cb_ not set");
+#endif
   }
 }
    
 void EventChannel::HandleWrite() {  
-  epoll_ptr_->MustInEpollThread();
+  epoll_ptr_->MustInLoopThread();
   if (write_cb_) {
 	write_cb_();
+  } else {
+#ifndef NDBUG
+    LOG_WARN("Write events occured, but write_cb_ not set");
+#endif
   }
 }
   
-void EventChannel::HandleWrite() {  
-  epoll_ptr_->MustInEpollThread();
+void EventChannel::HandleClose() {  
+  epoll_ptr_->MustInLoopThread();
   if (close_cb_) {
     close_cb_();
+  } else {
+#ifndef NDBUG
+    LOG_WARN("Write events occured, but write_cb_ not set");
+#endif
   }
 }
    
-void EventChannel::AddIntoEpoll() {
+void EventChannel::AddIntoLoop() {
   epoll_ptr_->RunNowOrLater(std::bind(&Epoll::AddChannel, epoll_ptr_, this));
 }
 
-void EventChannel::AddIntoEpollWithRead() {
-  epoll_ptr_->RunNowOrLater(std::bind(&EventChannel::AddIntoEpollWithReadInEpoll, this));
+void EventChannel::AddIntoLoopWithRead() {
+  epoll_ptr_->RunNowOrLater(std::bind(&EventChannel::AddIntoLoopWithReadInLoopThread, this));
 }
 
-void EventChannel::AddIntoEpollWithReadInEpoll() {
-  epoll_ptr_->MustInEpollThread();
+void EventChannel::AddIntoLoopWithReadInLoopThread() {
+  epoll_ptr_->MustInLoopThread();
   epoll_ptr_->AddChannel(this);
   EnableRD();
 }
 
-void EventChannel::AddIntoEpollWithWrite() {
-  epoll_ptr_->RunNowOrLater(std::bind(&EventChannel::AddIntoEpollWithWriteInEpoll, this));
+void EventChannel::AddIntoLoopWithWrite() {
+  epoll_ptr_->RunNowOrLater(std::bind(&EventChannel::AddIntoLoopWithWriteInLoopThread, this));
 }
 
-void EventChannel::AddIntoEpollWithWriteInEpoll() {
-  epoll_ptr_->MustInEpollThread();
+void EventChannel::AddIntoLoopWithWriteInLoopThread() {
+  epoll_ptr_->MustInLoopThread();
   epoll_ptr_->AddChannel(this);
   EnableWR();
 }
 
-void EventChannel::DeleteFromEpoll() {
-  epoll_ptr_->MustInEpollThread();
+void EventChannel::DeleteFromLoop() {
+  epoll_ptr_->MustInLoopThread();
 #ifndef NDEBUG
   LOG_CHECK(epoll_ptr_->HasChannel(this), "");
 #endif
-  epoll_ptr->DelChannel(this);
+  epoll_ptr_->DelChannel(this);
 }
 
 void EventChannel::EnableRD() { 
-  EnableRDWR(true, EPOLLIN | EPOLLRDHUP); 
+  EnableEvent(true, EPOLLIN | EPOLLRDHUP); 
   read_enabled_ = true; 
 }
 
 void EventChannel::DisableRD() { 
-  EnableRDWR(false, EPOLLIN | EPOLLRDHUP); 
+  EnableEvent(false, EPOLLIN | EPOLLRDHUP); 
   read_enabled_ = false; 
 }
 
 void EventChannel::EnableWR() { 
-  EnableRDWR(true, EPOLLOUT); 
+  EnableEvent(true, EPOLLOUT); 
   write_enabled_ = true; 
 }
 
 void EventChannel::DisableWR()  { 
-  EnableRDWR(false, EPOLLOUT); 
+  EnableEvent(false, EPOLLOUT); 
   write_enabled_ = false; 
 }
 
 void EventChannel::EnableRDWR() { 
-  EnableRDWR_(true, EPOLLIN | EPOLLRDHUP | EPOLLOUT); 
+  EnableEvent(true, EPOLLIN | EPOLLRDHUP | EPOLLOUT); 
   read_enabled_ = true; 
   write_enabled_ = true; 
 }
 
 void EventChannel::DisableRDWR() { 
-  EnableRDWR_(false, EPOLLIN | EPOLLRDHUP | EPOLLOUT); 
+  EnableEvent(false, EPOLLIN | EPOLLRDHUP | EPOLLOUT); 
   read_enabled_ = false; 
   write_enabled_ = false; 
 }
 
-void EventChannel::EnableRDWR(bool flag, uint32_t set_bit) {
-  epoll_ptr_->MustInEpollThread();
-  event_fields = (flag ? (event_fields | set_bit) : (event_fields & (~set_bit)));
-  epoll_ptr->RunNowOrLater(std::bind(&Epoll::UpdateChannel, epoll_ptr, this));
+void EventChannel::EnableEvent(bool flag, uint32_t set_bit) {
+  epoll_ptr_->MustInLoopThread();
+  event_fields_ = (flag ? (event_fields_ | set_bit) : (event_fields_ & (~set_bit)));
+  epoll_ptr_->RunNowOrLater(std::bind(&Epoll::UpdateChannel, epoll_ptr_, this));
 }
 
 } // namespace glue_network

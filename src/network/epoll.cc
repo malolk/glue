@@ -9,20 +9,22 @@
 #include <pthread.h>
 
 namespace glue_network {
+const size_t Epoll::default_event_num_ = 1024;
+
 void Epoll::Initialize() {
   epoll_fd_ = ::epoll_create1(EPOLL_CLOEXEC);
-  LOG_CHECK(epoll_fd >= 0, "");
+  LOG_CHECK(epoll_fd_ >= 0, "");
   process_id_ = glue_libbase::ThreadId();
   wakeup_fd_ = ::eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
   LOG_CHECK(wakeup_fd_ >= 0, "");
   
-  wakeup_chann.Initialize(std::bind(&Epoll::ReadWakeupChannel, this), 
+  wakeup_chann_.Initialize(std::bind(&Epoll::ReadWakeupChannel, this), 
                           std::bind(&Epoll::WriteWakeupChannel, this),
-                          std::bind(&Epoll::CloseWakeupChannel, this));
-  wakeup_chann.AddIntoLoopWithRead();
+                          std::bind(&Epoll::CloseWakeupChannel, this), wakeup_fd_);
+  wakeup_chann_.AddIntoLoopWithRead();
 }
 
-void MustInLoopThread() {
+void Epoll::MustInLoopThread() {
   LOG_CHECK(process_id_ == glue_libbase::ThreadId(), "Not the thread where epoll created. ");
 }
 
@@ -96,9 +98,9 @@ void Epoll::DelChannel(EventChannel* ev) {
 
 void Epoll::SetEvents(EventChannel* ev, int op) {
   struct epoll_event event;
-  event.events = ev->Fields();
+  event.events = ev->EventFields();
   event.data.ptr = ev;
-  int ret = epoll_ctl(epfd, op, ev->Fd(), &event);
+  int ret = epoll_ctl(epoll_fd_, op, ev->Fd(), &event);
   if (ret) { 
 	LOG_ERROR("epoll_ctl failed on fd=%d", ev->Fd());	
   }
@@ -107,12 +109,12 @@ void Epoll::SetEvents(EventChannel* ev, int op) {
 void Epoll::Run() {
   MustInLoopThread();
   LOG_CHECK(!running_, "");
-  running = true;
+  running_ = true;
   while (running_) {
-	int ret = epoll_wait(epfd, &(*events.begin()), static_cast<int>(events.size()), -1);
+	int ret = epoll_wait(epoll_fd_, &(*events_.begin()), static_cast<int>(events_.size()), -1);
 	LOG_CHECK(ret > 0, "");
-	if (static_cast<size_t>(ret) == events.size()) {
-	  events.resize(2 * events.size());
+	if (static_cast<size_t>(ret) == events_.size()) {
+	  events_.resize(2 * events_.size());
     }
 	is_handling_events_ = true;
 	HandleEvents(ret);
@@ -129,15 +131,15 @@ bool Epoll::HasChannel(EventChannel* ev) {
 void Epoll::HandleEvents(int events_num) {
   MustInLoopThread();
   for (int index = 0; index < events_num; ++index) {
-	EventChannel* chann_ptr = static_cast<EventChannel*>(events[index].data.ptr);
-	uint32_t ret_fields = events[index].events;
+	EventChannel* chann_ptr = static_cast<EventChannel*>(events_[index].data.ptr);
+	uint32_t ret_fields = events_[index].events;
 	HandleEventsImpl(chann_ptr, ret_fields);
   }
 }
 
 void Epoll::HandleEventsImpl(EventChannel* chann_ptr, uint32_t ret_fields) {
 #ifndef NDEBUG
-  LOG_CHECK(HasChannel(chann_ptr));
+  LOG_CHECK(HasChannel(chann_ptr), "");
 #endif
   if (ret_fields & EPOLLIN || ret_fields & EPOLLRDHUP || ret_fields & EPOLLPRI) {
     chann_ptr->HandleRead();
@@ -155,12 +157,12 @@ void Epoll::HandleEventsImpl(EventChannel* chann_ptr, uint32_t ret_fields) {
 void Epoll::HandleRequests() {
   std::vector<CallbackType> req_buf;
   {
-	MutexLockGuard m(mu);
-	std::swap(req_buf, requests_);
+    glue_libbase::MutexLockGuard m(mu_);
+	std::swap(req_buf, pending_requests_);
   }
   
   for (std::vector<CallbackType>::iterator it = req_buf.begin();
-	   it != rcvReqs.end(); ++it) {
+	   it != req_buf.end(); ++it) {
     (*it)();
   }
 }

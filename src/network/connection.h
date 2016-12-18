@@ -14,10 +14,10 @@
 #include <atomic>
 
 namespace glue_network {
-class Connection: private libbase::Noncopyable,
+class Connection: private glue_libbase::Noncopyable,
 				  public std::enable_shared_from_this<Connection> {
  public:
-  typedef std::function<void(std::shared_ptr<Connection>&, BUF& )> CallbackReadType;
+  typedef std::function<void(std::shared_ptr<Connection>&, ByteBuffer& )> CallbackReadType;
   typedef std::function<void(std::shared_ptr<Connection>&)> CallbackInitType;
   typedef std::function<void()> CallbackCloseType;
 
@@ -26,23 +26,25 @@ class Connection: private libbase::Noncopyable,
     kCLOSING = 20,
     kCLOSED = 30,
   };
-  Connection(int sockfd, poller::Epoll* ep)
+  Connection(int sockfd, Epoll* ep)
     : sockfd_(sockfd), epoll_ptr_(ep), channel_(ep, sockfd),
-	  state_(CONNECTED) { 
+	  state_(kCONNECTED) { 
     LOG_CHECK(sockfd_ >= 0 && ep != NULL, "");
   }
 	
   ~Connection() {
+    Socket::Close(sockfd_);
 	LOG_INFO("Connection on fd=%d destructed", sockfd_);
   }
 
   void SetReadOperation(const CallbackReadType& cb);
   void SetCloseOperation(const CallbackCloseType& cb);
   void SetInitOperation(const CallbackInitType& cb);
-　void Send(ByteBuffer& data);
+  void Send(ByteBuffer& data);
   void WriteCallback();
   void ReadCallback();
   void Close();
+  void DestroyedInLoop(std::shared_ptr<Connection> conn_ptr);
   void Shutdown();
   void ShutdownNow();
   void Initialize(); 

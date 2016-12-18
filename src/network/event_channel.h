@@ -15,9 +15,15 @@ class Epoll;
 class EventChannel: private glue_libbase::Noncopyable {
  public:
   typedef std::function<void()> CallbackType;
+  explicit EventChannel(Epoll* ep) 
+    : io_fd_(-1), epoll_ptr_(ep), event_fields_(0),
+      write_enabled_(false), read_enabled_(false) {
+    LOG_CHECK(epoll_ptr_ != NULL, "");
+  }
+
   EventChannel(Epoll* ep, int fd)
-    : io_fd_(fd), epoll_ptr_(ep), event_fields(0), 
-      is_notify_write_(false), is_notify_read_(false) {
+    : io_fd_(fd), epoll_ptr_(ep), event_fields_(0), 
+      write_enabled_(false), read_enabled_(false) {
     LOG_CHECK(io_fd_ >= 0, "");
     LOG_CHECK(epoll_ptr_ != NULL, "");
   }
@@ -25,21 +31,25 @@ class EventChannel: private glue_libbase::Noncopyable {
   ~EventChannel() {
   }
 
-  void SetCallbacks(const CallbackType& read_cb, const CallbackType& write_cb, 
-                    const CallbackType& close_cb_) {
+  void Initialize(const CallbackType& read_cb, const CallbackType& write_cb,
+                  const CallbackType& close_cb, int fd = -1) {
     read_cb_ = read_cb;
     write_cb_ = write_cb;
     close_cb_ = close_cb;
+    if (fd < 0) {
+      LOG_CHECK(io_fd_ >= 0, "io_fd_ is not set yet");
+    } else {
+      io_fd_ = fd; 
+    }
   }
-
   void HandleRead();
   void HandleWrite();
   void HandleClose();
 
-  void AddIntoEpollWithRead();
-  void AddIntoEpollWithWrite();
-  void AddIntoEpoll();
-  void DeleteFromEpoll();
+  void AddIntoLoopWithRead();
+  void AddIntoLoopWithWrite();
+  void AddIntoLoop();
+  void DeleteFromLoop();
   void EnableRDWR();
   void DisableRDWR();
   void EnableRD();
@@ -64,16 +74,17 @@ class EventChannel: private glue_libbase::Noncopyable {
   }
  
   uint32_t EventFields() const {
-    return event_fields;
+    return event_fields_;
   }
+  
  private:
-  void EnableRDWR(bool flag, uint32_t setBit);
-  void AddIntoEpollWithReadInEpoll();
-  void AddIntoEpollWithWriteInEpoll();
+  void EnableEvent(bool flag, uint32_t set_bit);
+  void AddIntoLoopWithReadInLoopThread();
+  void AddIntoLoopWithWriteInLoopThread();
 
   int io_fd_;
   Epoll* epoll_ptr_;
-  uint32_t event_fields;
+  uint32_t event_fields_;
   bool write_enabled_;
   bool read_enabled_;
   CallbackType read_cb_;
