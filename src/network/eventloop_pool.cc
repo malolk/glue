@@ -1,8 +1,8 @@
 #include "eventloop_pool.h"
 
 namespace glue_network {
-Epoll* EventLoopPool::NextEventLoop() {
-  Epoll* ret = pool_[dispatch_id_++]->EpollPtr();
+EventLoop* EventLoopPool::NextEventLoop() {
+  EventLoop* ret = pool_[dispatch_id_++].get();
   if (dispatch_id_ == pool_size_) {
     dispatch_id_ = 0;
   }
