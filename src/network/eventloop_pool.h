@@ -22,7 +22,7 @@ class EventLoopPool: private glue_libbase::Noncopyable {
   
   void Start();
   void Shutdown();
-  Epoll* NextEventLoop();
+  EventLoop* NextEventLoop();
 
  private:
   const int pool_size_;  
