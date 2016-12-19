@@ -46,7 +46,7 @@ class Thread: private Noncopyable {
 
   bool IsJoined() { return joined_; }
   int TaskNum() { return bqueue_.size(); }
-  pid_t GetThreadId() { return thread_id_; }
+  pid_t GetThreadId() { return process_id_; }
   std::string name() { return name_; }
 
   ~Thread() {
