@@ -48,7 +48,10 @@ class Epoll: private glue_libbase::Noncopyable {
   void AddChannel(EventChannel* );
   void DelChannel(EventChannel* );
   void UpdateChannel(EventChannel* );
-	
+
+  int ThreadId() const {
+    return process_id_;
+  }
  private:
   void StopInLoop();
   void SetEvents(EventChannel*, int op);
