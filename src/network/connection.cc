@@ -53,7 +53,8 @@ void Connection::SendInLoopThread(ByteBuffer& data) {
 	  epoll_ptr_->RunLater(std::bind(&EventChannel::HandleClose, &channel_));
 	  return;
 	} else if (static_cast<size_t>(sent_num) == send_size) {
-	  /* Maybe connection already is in closing state and write is finished, then shutdown the connection. */
+	  /* Maybe connection already is in closing state and write is finished, 
+       * then shutdown the connection. */
 	  if (state_ == kCLOSING) {
 	    Close();
       }

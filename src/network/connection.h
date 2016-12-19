@@ -17,8 +17,8 @@ namespace glue_network {
 class Connection: private glue_libbase::Noncopyable,
 				  public std::enable_shared_from_this<Connection> {
  public:
-  typedef std::function<void(std::shared_ptr<Connection>&, ByteBuffer& )> CallbackReadType;
-  typedef std::function<void(std::shared_ptr<Connection>&)> CallbackInitType;
+  typedef std::function<void(std::shared_ptr<Connection>, ByteBuffer& )> CallbackReadType;
+  typedef std::function<void(std::shared_ptr<Connection>)> CallbackInitType;
   typedef std::function<void()> CallbackCloseType;
 
   enum {
