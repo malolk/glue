@@ -48,9 +48,10 @@ void Connection::SendInLoopThread(ByteBuffer& data) {
   if (send_buf_.ReadableBytes() == 0) {
 	sent_num = Socket::Send(sockfd_, data);
 	if (sent_num == Socket::kERROR) {
-      /* Write error, so close it. */
-	  state_ = kCLOSED;
-	  epoll_ptr_->RunLater(std::bind(&EventChannel::HandleClose, &channel_));
+      if (state_ != kCLOSED) {
+        /* Write error, so close it. */
+        epoll_ptr_->RunLater(std::bind(&EventChannel::HandleClose, &channel_));
+      }
 	  return;
 	} else if (static_cast<size_t>(sent_num) == send_size) {
 	  /* Maybe connection already is in closing state and write is finished, 
@@ -76,8 +77,9 @@ void Connection::WriteCallback() {
 
   ssize_t sent_num = Socket::Send(sockfd_, send_buf_);
   if (sent_num == Socket::kERROR) {
-    state_ = kCLOSED;
-	epoll_ptr_->RunLater(std::bind(&EventChannel::HandleClose, &channel_));
+    if (state_ != kCLOSED) {
+	  epoll_ptr_->RunLater(std::bind(&EventChannel::HandleClose, &channel_));
+    }
 	return;
   }
   send_buf_.MoveReadPos(sent_num);
@@ -101,18 +103,25 @@ void Connection::ReadCallback() {
 	return;
   } else if (recv_num == 0) {
     /* Peer closed. */
-	state_ = kCLOSED;
-	epoll_ptr_->RunLater(std::bind(&EventChannel::HandleClose, &channel_));
+    if (state_ != kCLOSED) {
+	  epoll_ptr_->RunLater(std::bind(&EventChannel::HandleClose, &channel_));
+    }
   }	else {
     /* Error occured, log this and close it. */
-    state_ = kCLOSED; 
-	epoll_ptr_->RunLater(std::bind(&EventChannel::HandleClose, &channel_));
+    if (state_ != kCLOSED) {
+	  epoll_ptr_->RunLater(std::bind(&EventChannel::HandleClose, &channel_));
+    }
 	LOG_ERROR("read error on connection of fd=%d", sockfd_);
   }
 }
 
 void Connection::Close() {
   epoll_ptr_->MustInLoopThread();
+  if (state_ == kCLOSED) {
+    return;
+  } else {
+    state_ = kCLOSED;
+  }
   channel_.DisableRDWR();
   /* close_cb_ may erase current connection from connection-pool. 
    * But maybe there are events using this connection, 
@@ -128,14 +137,16 @@ void Connection::Close() {
 void Connection::DestroyedInLoop(std::shared_ptr<Connection> conn_ptr) {
   epoll_ptr_->MustInLoopThread();
   channel_.DeleteFromLoop();
+  LOG_INFO("connection on fd=%d closed", sockfd_);
 }
 
 void Connection::ShutdownNow() {
   if (state_ != kCONNECTED) {
     return;
   }
-  state_ = kCLOSED;
-  epoll_ptr_->RunNowOrLater(std::bind(&EventChannel::HandleClose, &channel_));
+  if (state_ != kCLOSED) {
+    epoll_ptr_->RunNowOrLater(std::bind(&EventChannel::HandleClose, &channel_));
+  }
 }
 
 /* Could be used across threads. We first close write and close entirely when 

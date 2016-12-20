@@ -51,7 +51,10 @@ class Connection: private glue_libbase::Noncopyable,
   Epoll* EpollPtr() const { 
     return epoll_ptr_; 
   } 
-
+  
+  int Fd() const {
+    return sockfd_;
+  }
  private:
   void SendInLoopThread(ByteBuffer& data);
   void StopWrite();
