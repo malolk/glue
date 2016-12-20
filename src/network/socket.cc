@@ -171,6 +171,7 @@ ssize_t Socket::Send(int sockfd, ByteBuffer& buf) {
 
 int Socket::Connect(int sockfd, const SocketAddress& server_addr) {
   LOG_CHECK(sockfd >= 0, "");
+  errno = 0;
   int ret = ::connect(sockfd, server_addr.ToAddrTypeVoid(), server_addr.Length());
   if (ret < 0) {
     LOG_ERROR("connect on ip=%s, port=%d, sockfd=%d ", 
