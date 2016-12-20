@@ -2,9 +2,8 @@
 
 namespace glue_network {
 void TcpClient::Start() {
-  sockfd_ = Connector::GetConnectedSocket(max_runs_, server_addr_, 0);
+  sockfd_ = Connector::GetConnectedSocket(max_runs_, server_addr_, 1);
   LOG_CHECK(sockfd_ >= 0, "connect failed");
-  Socket::EnableNonBlock(sockfd_, 1);
   Epoll epoller;
   epoller.Initialize();
   epoll_ptr_ = &epoller;
