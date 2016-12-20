@@ -19,8 +19,7 @@ void EventLoopPool::Start() {
 
 void EventLoopPool::Shutdown() {
   for (int index = 0; index < pool_size_; ++index) {
-    Epoll* epoll_ptr = pool_[index]->EpollPtr();
-	epoll_ptr->Stop();
+    pool_[index]->Stop();
   }
 	
   for (int index = 0; index < pool_size_; ++index) {

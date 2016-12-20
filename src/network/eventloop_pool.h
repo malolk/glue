@@ -14,7 +14,7 @@ class EventLoopPool: private glue_libbase::Noncopyable {
  public:
   explicit EventLoopPool(int pool_size) 
     : pool_size_(pool_size), dispatch_id_(0) {
-    LOG_CHECK(pool_size_ > 0, "");
+    LOG_CHECK(pool_size_ >= 0, "");
   }
 
   ~EventLoopPool() {
