@@ -1,11 +1,11 @@
-#ifndef NETWORK_TIMERQUEUE_H
-#define NETWORK_TIMERQUEUE_H
+#ifndef GLUE_NETWORK_TIMERQUEUE_H_
+#define GLUE_NETWORK_TIMERQUEUE_H_
 
-#include <network/Timer.h>
-#include <network/EventChannel.h>
-#include <libbase/Heap.h>
-#include <libbase/Noncopyable.h>
-#include <libbase/TimeStamp.h>
+#include "timer.h"
+#include "event_channel.h"
+#include "../libbase/heap.h"
+#include "../libbase/noncopyable.h"
+#include "../libbase/timeutil.h"
 
 #include <utility>
 #include <memory>
@@ -14,58 +14,41 @@
 #include <sys/timerfd.h>
 #include <unistd.h>
 
-namespace network
-{
+namespace glue_network {
+bool CompareTimer(const glue_network::Timer&, const glue_network::Timer&);
+class TimerQueue: private glue_libbase::Noncopyable {
+ public:
+  typedef std::weak_ptr<glue_libbase::Element<Timer>> TimerIdType;
+  explicit TimerQueue(Epoll* epoll_ptr) 
+    : epoll_ptr_(epoll_ptr), timer_fd_(-1), timer_chann_(epoll_ptr), timer_pool_(4, CompareTimer) { 
+  }
 
-namespace poller
-{
-class Epoll;	
-}
-namespace timer
-{
+  ~TimerQueue() {
+    if (timer_fd_ >= 0) {
+	  ::close(timer_fd_);
+    }
+  }
 
-typedef std::pair<libbase::TimeStamp, Timer*> TimerKey;
-bool compareOnTimer(const TimerKey&, const TimerKey&);
+  void Initialize();
+  /* User could use id to update or delete timer. 
+   * id would be tied to the timer when id was not NULL. */
+  void AddTimer(TimerIdType* id, const Timer& timer);
+  void DelTimer(TimerIdType* id);
+  void UpdateTimer();
 
-class TimerQueue: private libbase::Noncopyable
-{
-public:
-	explicit TimerQueue(poller::Epoll* ep): 
-		timerList(true, 4, compareOnTimer), 
-		timerFd(-1),
-		initialized(false),
-		closed(true),
-		onTimeout(false),
-		epollPtr(ep)
-	{ }
+ private:
+  void AddTimerInLoop(TimerIdType* id, const Timer& timer);
+  void DelTimerInLoop(TimerIdType& timer_id);
+  void ReadTimerChannel();
+  void ResetTimerFd();
 
-	~TimerQueue() 
-	{
-		if (!closed && initialized)
-			::close(timerFd);
-	}
+  Epoll* epoll_ptr_;
+  int timer_fd_;
+  EventChannel timer_chann_;
+  glue_libbase::Heap<Timer> timer_pool_;
 
-	void initialize();
-	Timer* addTimer(const libbase::TimeStamp& tm, const CallbackOnTimeout& cb, time_t interval = 0);
-	void delTimer(Timer*);
-
-private:
-	void addTimerInEpoll(Timer* );
-	void delTimerInEpoll(Timer* );
-	void readTimerChannel();
-	void resetTimerFd(std::vector<TimerKey>& );
-	void getExpiredTimer(std::vector<TimerKey>& expiredTimer);
-
-	libbase::Heap<TimerKey> timerList;
-	std::set<TimerKey> deletedTimerList;
-	std::set<TimerKey> deletedOnTimeout;
-	int timerFd;
-	bool initialized;
-	bool closed;
-	bool onTimeout;
-	poller::Epoll* epollPtr;
-	poller::EventChannel timerChannel;
+  /* Prevent from handling too many timeouts in one time. */
+  static const int max_num_one_shot_;
 };
-}
-}
-#endif
+} // namespace glue_network
+#endif // GLUE_NETWORK_TIMERQUEUE_H_

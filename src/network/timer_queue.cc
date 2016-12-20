@@ -1,46 +1,43 @@
-#include <network/TimerQueue.h>
-#include <network/Epoll.h>
-#include <libbase/Debug.h>
+#include "timer_queue.h"
+#include "epoll.h>"
+#include "../libbase/logger.h"
 
 #include <string.h>
 
-using namespace libbase;
-using namespace network;
-using namespace network::timer;
-
-namespace network
-{
-namespace timer
-{
-
-bool compareOnTimer(const TimerKey& lhs, const TimerKey& rhs)
-{
-	return (lhs.first < rhs.first);
+namespace glue_network {
+const int TimerQueue::max_num_one_shot_ = 1000;
+bool CompareTimer(const Timer& lhs, const Timer& rhs) {
+	return (lhs.GetExpiration() < rhs.GetExpiration());
 }
 
-void setTimerFd(int fd, int64_t timeFromNow)
-{
-	struct itimerspec newVal;
-	bzero(&newVal, sizeof newVal);
-	newVal.it_value.tv_sec = timeFromNow/1000000;
-	newVal.it_value.tv_nsec = (timeFromNow%1000000)*1000;
-	CHECKX(timerfd_settime(fd, 0, &newVal, NULL) == 0,
-	"timerfd_settime error");
+namespace {
+void SetTimerFd(int fd, int64_t expiration) {
+  LOG_CHECK(fd >= 0, "");
+  struct itimerspec new_val;
+  bzero(&new_val, sizeof(new_val));
+  new_val.it_value.tv_sec = expiration / 1000000LL;
+  new_val.it_value.tv_nsec = (expiration - new_val.it_value.tv_sec * 1000000LL) * 1000L;
+  int ret = timerfd_settime(fd, 0, &new_val, NULL);
+  LOG_CHECK(ret == 0, "");
 }
 
-void startTimerFd(int fd, const TimeStamp& when)
-{
-	TimeStamp now;
-	int64_t diff = when.diffInMicroSecond(now);
-	if (diff <= 0) diff = 100;
-	setTimerFd(fd, diff);
+void StartTimerFd(int fd, int64_t when) {
+  /* Here, use the time difference relative to current time to setting timerfd. */
+  int64_t diff = when - TimeUtil::NowMicros();
+  if (diff < 0)  {
+    diff = 0;
+  }
+  SetTimerFd(fd, diff);
 }
 
-void stopTimerFd(int fd)
-{
-	setTimerFd(fd, 0);
+void StopTimerFd(int fd) {
+  SetTimerFd(fd, 0);
 }
 
+void CallbackWrite() {
+}
+
+void CallbackClose() {
 }
 }
 
@@ -50,135 +47,79 @@ void stopTimerFd(int fd)
 * e.g. TimerA could delete TimerB while timeout, then TimerB 
 * should't be restart when reset timerfd
 */
-void TimerQueue::delTimer(Timer* timerId)
-{
-	epollPtr->runNowOrLater(std::bind(&TimerQueue::delTimerInEpoll, this, timerId));	
+void TimerQueue::DelTimer(TimerIdType* id) {
+  LOG_CHECK(id != NULL, "");
+  epoll_ptr_->RunNowOrLater(std::bind(&TimerQueue::DelTimerInLoop, this, std::ref(*id)));	
 }
 
-void TimerQueue::delTimerInEpoll(Timer* timerId)
-{
-	TimerKey deletedTimerKey = std::make_pair(timerId->getExpiration(), timerId);
-	if(!timerList.isEmpty())
-	{
-		if(timerList.top().first > deletedTimerKey.first)
-		{
-			if(onTimeout)
-			{
-				deletedOnTimeout.insert(deletedTimerKey);	
-			}
-		}
-		else
-		{
-			deletedTimerList.insert(deletedTimerKey);
-		}
-	}
-	else if(onTimeout)
-	{
-		deletedOnTimeout.insert(deletedTimerKey);
-	}
+void TimerQueue::DelTimerInLoop(TimerIdType& id) {
+  epoll_ptr_->MustInLoopThread();
+  timer_pool_.Delete(id);
 }
  
-/*
-* across thread 
-*/
-Timer* TimerQueue::addTimer(const TimeStamp& tm, const CallbackOnTimeout& cb, time_t interval)
-{
-	Timer* newTimer = new Timer(cb, tm, interval);
-	epollPtr->runNowOrLater(std::bind(&TimerQueue::addTimerInEpoll, this, newTimer));
-	return newTimer;
+/* thread-safe */
+void TimerQueue::AddTimer(TimerIdType* id, const Timer& timer) {
+  epoll_ptr_->RunNowOrLater(std::bind(&TimerQueue::AddTimerInLoop, this, id, std::ref(timer)));
 }
 
-void TimerQueue::addTimerInEpoll(Timer* newTimer)
-{
-	TimerKey newTimerKey = std::make_pair(newTimer->getExpiration(), newTimer);
-	bool isMin = true;
-	if (!timerList.isEmpty()) 
-	{
-		TimerKey currentMin = timerList.top();
-		if (newTimerKey.first > currentMin.first)
-			isMin = false;
-	}
-	timerList.insert(newTimerKey);
-	if (isMin)
-		startTimerFd(timerFd, newTimerKey.first);
+void TimerQueue::AddTimerInLoop(TimerIdType* id, const Timer& timer) {
+  bool is_new_min = true;
+  /* Check whether the comming timer is the new-minimum. */
+  if (!timer_pool_.Empty()) {
+    if (CompareTimer(timer_pool_.Top(), timer)) {
+      is_new_min = false;  
+    }	
+  }
+  if (id) {
+    /* Transfer the TimerId to the user. */
+    *id = timer_pool_.Insert();
+  } else {
+    timer_pool_.Insert();
+  }
+  if (is_new_min) {
+    /* Resetting the timeout time. */
+    StartTimerFd(timer_fd_, timer.GetExpiration());
+  }
 }
 
-void TimerQueue::readTimerChannel()
-{
-	uint64_t buf;
-	ssize_t ret = ::read(timerFd, &buf, sizeof(uint64_t));
-	CHECKX(ret == static_cast<ssize_t>(sizeof(uint64_t)), "timerfd read error");
-
-	std::vector<TimerKey> expiredTimer;
-	getExpiredTimer(expiredTimer);
-	deletedOnTimeout.clear();
-
-	onTimeout = true;
-	for (std::vector<TimerKey>::const_iterator it = expiredTimer.cbegin(); 
-	it != expiredTimer.cend(); ++it)
-	{
-		if(deletedTimerList.find((*it)) == deletedTimerList.end())
-			(*it).second->timeout();
-	}
-	onTimeout = false;
-
-	resetTimerFd(expiredTimer);	
+void TimerQueue::ReadTimerChannel() {
+  uint64_t buf;
+  ssize_t ret = ::read(timer_fd_, &buf, sizeof(uint64_t));
+  LOG_CHECK(ret == static_cast<ssize_t>(sizeof(uint64_t)), "timerfd read error");
+  
+  int timeout_num = 0;
+  int64_t now_time = TimeUtil::NowMicros();
+  while (!timer_pool_.Empty() && timeout_num < max_num_one_shot_) {
+    if (timer_pool_.Top().GetExpiration() <= now_time) {
+      timer_pool_.Top().Timeout();
+      if (timer_pool_.Top().IsRepeated()) {
+        /* Reinsert the top element to the heap. */
+        timer_pool_.Top().Update();
+        timer_pool_.Sink(0);        
+      } else {
+        timer_pool_.Pop();
+      }
+      ++timeout_num;
+    } else {
+      break;
+    }
+  }
+  ResetTimerFd();	
 }
 
-void TimerQueue::resetTimerFd(std::vector<TimerKey>& expiredTimer)
-{
-	for(std::vector<TimerKey>::iterator it = expiredTimer.begin();
-	it != expiredTimer.end(); ++it)
-	{
-		std::set<TimerKey>::iterator itTimer = deletedTimerList.find(*it);
-		if((*it).second->isRepeated() && (deletedOnTimeout.find(*it) == deletedOnTimeout.end()) && (itTimer == deletedTimerList.end()))	
-		{
-			(*it).second->restart();
-			TimerKey newTimerKey = std::make_pair((*it).second->getExpiration(), (*it).second);
-			timerList.insert(newTimerKey);	
-		}
-		else
-		{
-			delete (*it).second;
-			if(itTimer != deletedTimerList.end())
-				deletedTimerList.erase(itTimer);	
-		}
-	}
-
-	if (timerList.isEmpty())
-		stopTimerFd(timerFd);
-	else
-		startTimerFd(timerFd, timerList.top().first); 
+void TimerQueue::ResetTimerFd() {
+  if (timer_pool_.Empty()) {
+    /* No any active timers, so stop the timer channel. */
+    StopTimerFd(timer_fd_);
+  } else {
+    /* Setting the timer as the time of top element in heap. */
+	StartTimerFd(timer_fd_, timer_pool_.Top().GetExperation()); 
+  }
 }
 
-void TimerQueue::getExpiredTimer(std::vector<TimerKey>& expiredTimer)
-{
-	TimeStamp now;
-	while(!timerList.isEmpty())	
-	{
-		TimerKey minTimer = timerList.top();
-		if (minTimer.first < now)
-		{
-			expiredTimer.push_back(minTimer);
-			timerList.topAndPop();
-		}
-		else
-		{
-			break;
-		}
-	}
+void TimerQueue::Initialize() {
+  timer_fd_ = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
+  LOG_CHECK(timer_fd_ >= 0);
+  timer_chann_.Intialize(std::bind(&TimerQueue::ReadTimerChannel, this), CallbackWrite, CallbackClose, timer_fd_);
 }
-
-void TimerQueue::initialize()
-{
-	CHECK(!initialized);
-	timerFd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
-	CHECK(timerFd >= 0);
-
-	timerChannel.setEpoll(epollPtr);
-	timerChannel.setIoFd(timerFd);
-	timerChannel.setCallbackOnRead(std::bind(&TimerQueue::readTimerChannel, this));
-	timerChannel.addIntoEpoll();
-	timerChannel.enableReading();
-	initialized = true; 
-}
+} // namespace glue_network
