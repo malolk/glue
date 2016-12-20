@@ -8,7 +8,7 @@
 #include <functional>
 
 namespace glue_network {
-class Timer: private glue_libbase::Noncopyable {
+class Timer {
  public:
   typedef std::fuction<void()> CallbackTimeoutType;
   /* when interval == 0, the timer will just timeout once at most. Otherwise, the next timeout time 
