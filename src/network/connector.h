@@ -34,8 +34,8 @@ class Connector : private glue_libbase::Noncopyable {
 
   /* Retry max_runs times when connect failed. */
   int Connect(int max_runs) {
-    LOG_CHECK(max_runs > 0, "");
-    while (max_runs-- > 0) {
+    LOG_CHECK(max_runs >= 0, "");
+    while (max_runs-- >= 0) {
       int ret = Socket::Connect(sockfd_, server_addr_);
       if (ret == 0) {
         return sockfd_;
