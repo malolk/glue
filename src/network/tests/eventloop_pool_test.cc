@@ -53,11 +53,11 @@ void CloseListenSocket() {
   /* Nothing to do. When server finishes, acceptor destructor would close the listen socket. */
 }
 
-void RunSingleThreadEpollServer() {
+void RunServer() {
   glue_network::Epoll epoller;
+  epoller.Initialize();
   glue_network::EventLoopPool eventloop_pool(2);
   eventloop_pool.Start();
-  epoller.Initialize();
   glue_network::SocketAddress server_addr; /* Default server address: 127.0.0.1:8080. */
   glue_network::Acceptor acceptor(server_addr); /* Make listen socket non-blocking. */
   glue_network::EventChannel acceptor_chann(&epoller, acceptor.Fd());
@@ -68,6 +68,6 @@ void RunSingleThreadEpollServer() {
 }
 
 int main() {
-  RunSingleThreadEpollServer();
+  RunServer();
   return 0;	
 }

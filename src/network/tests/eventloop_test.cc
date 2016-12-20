@@ -29,6 +29,7 @@ void ReadListenSocket(glue_network::Acceptor* acceptor,
 	if (ret >= 0) {
         glue_network::Epoll* epoll_ptr = event_loop->EpollPtr();
         epoll_ptr->RunNowOrLater(std::bind(&glue_network::EventLoop::NewConnection, event_loop, ret, ReadConnection));
+        LOG_INFO("New connection on fd=%d", ret);
     } else {
       if (ret == glue_network::Socket::kRETRY) {
         /* Already accept all the connection. */
@@ -50,21 +51,19 @@ void CloseListenSocket() {
   /* Nothing to do. When server finishes, acceptor destructor would close the listen socket. */
 }
 
-void RunSingleThreadEpollServer() {
-  glue_network::Epoll epoller;
+void RunServer() {
   glue_network::EventLoop event_loop;
-  event_loop.Start();
-  epoller.Initialize();
+  glue_network::Epoll* epoll_ptr = event_loop.Start();
   glue_network::SocketAddress server_addr; /* Default server address: 127.0.0.1:8080. */
   glue_network::Acceptor acceptor(server_addr); /* Make listen socket non-blocking. */
-  glue_network::EventChannel acceptor_chann(&epoller, acceptor.Fd());
+  glue_network::EventChannel acceptor_chann(epoll_ptr, acceptor.Fd());
   acceptor_chann.Initialize(std::bind(ReadListenSocket, &acceptor, &event_loop), 
                             WriteListenSocket, CloseListenSocket);
   acceptor_chann.AddIntoLoopWithRead();
-  epoller.Run();
+  while (1);
 }
 
 int main() {
-  RunSingleThreadEpollServer();
+  RunServer();
   return 0;	
 }
