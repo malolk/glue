@@ -1,12 +1,10 @@
 #ifndef GLUE_LIBBASE_TIMEUTIL_H_
 #define GLUE_LIBBASE_TIMEUTIL_H_
 
-//#include <libbase/debug.h>
-
 #include <string>
 
 #include <sys/time.h>
-#include <time.h>
+#include <time.h> 
 #include <string.h>
 
 namespace glue_libbase {
