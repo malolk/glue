@@ -42,9 +42,11 @@ class Heap: private Noncopyable {
   ~Heap() {
   }
   T TopAndPop();
-  T Top();
+  void Pop();
+  T& Top();
   /* Use weak_ptr to detect whether the element is still exit in the array_. */
   std::weak_ptr<Element<T>> Insert(const T& data);
+  std::weak_ptr<Element<T>> GetTopId();
   int Delete(std::weak_ptr<Element<T>>& id);
   int Update(std::weak_ptr<Element<T>>& id, const T& data);
   int Get(const std::weak_ptr<Element<T>>& id, T& result) const {
@@ -65,10 +67,11 @@ class Heap: private Noncopyable {
     return size_; 
   }
 
- private:
-  bool Compare(const std::shared_ptr<Element<T>>&, const std::shared_ptr<Element<T>>&);
   void Swim(int );
   void Sink(int );
+
+ private:
+  bool Compare(const std::shared_ptr<Element<T>>&, const std::shared_ptr<Element<T>>&);
 
   int ary_num_;
   int size_;
@@ -136,6 +139,12 @@ void Heap<T>::Sink(int index) {
 }
 
 template <class T>
+std::weak_ptr<Element<T>> Heap<T>::GetTopId() const {
+  LOG_CHECK(size_ > 0, "Heap is empty");
+  return array_[0];    
+}
+
+template <class T>
 std::weak_ptr<Element<T>> Heap<T>::Insert(const T& elem) {
   if (static_cast<unsigned int>(size_) == array_.size()) {
     array_.resize(2 * size_);
@@ -145,6 +154,16 @@ std::weak_ptr<Element<T>> Heap<T>::Insert(const T& elem) {
   ++size_;
   Swim(size_ - 1);
   return ret;
+}
+
+template <class T>
+void Heap<T>::Pop() {
+  LOG_CHECK(size_ > 0, "Heap is empty");
+  array_[0] = array_[size_ - 1];
+  array_[size_ - 1].reset();
+  if (--size_ > 0 ) {
+    Sink(0);
+  }
 }
 
 template <class T>
@@ -160,7 +179,7 @@ T Heap<T>::TopAndPop() {
 }
 
 template <class T>
-T Heap<T>::Top() {
+T& Heap<T>::Top() {
   LOG_CHECK(size_ > 0, "Heap is empty");
   return array_[0]->data_;
 }
