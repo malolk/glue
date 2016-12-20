@@ -23,7 +23,7 @@
 #include <unistd.h>
 
 namespace glue_network {
-class TcpServer: private glue_libbase::Noncopyable, public EventLoop {
+class TcpServer: public EventLoop {
  public:
   explicit TcpServer(const SocketAddress& server_addr, 
                      int pool_size, const Connection::CallbackReadType read_cb) 

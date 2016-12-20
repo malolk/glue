@@ -6,14 +6,15 @@ void TcpServer::ReadListenSocket() {
   while (true) {
     int conn_fd = acceptor_.Accept();
     if (conn_fd >= 0) {
-      dispatch_id_++;
+      dispatch_counter_++;
       Epoll* epoll_ptr = NULL;
-      if (dispatch_id_ == pool_size_) {
+      if (dispatch_counter_ == pool_size_) {
         epoll_ptr = EventLoop::epoll_ptr_;
         epoll_ptr->RunNowOrLater(std::bind(&TcpServer::NewConnection, this, conn_fd, read_cb_));
+        dispatch_counter_ = 0;
       } else {
         EventLoop* eventloop_ptr = eventloop_pool_.NextEventLoop();
-        Epoll* epoll_ptr = eventloop_ptr->EpollPtr();
+        epoll_ptr = eventloop_ptr->EpollPtr();
         epoll_ptr->RunNowOrLater(std::bind(&EventLoop::NewConnection, eventloop_ptr, conn_fd, read_cb_));
       }
       LOG_INFO("Accept connection on fd=%d, and transfer to epoll in thread=%d", conn_fd, epoll_ptr->ThreadId());
@@ -33,18 +34,17 @@ void TcpServer::ReadListenSocket() {
 void TcpServer::Routine() {
   Epoll epoller;
   epoller.Initialize();
-
   eventloop_pool_.Start();
-  EventChannel acceptor_chann(EventLoop::epoll_ptr_, acceptor_.Fd());
-  /* TODO: Here, WriteListenSocket and CloseListenSocket do nothing but just to be in consistence with 
-   * the EventChannel::Initialize. Fix it later. */
-  acceptor_chann_.Initialize(std::bind(ReadListenSocket, this), WriteListenSocket, CloseListenSocket);
-  acceptor_chann_.AddIntoLoopWithRead();
   {
     glue_libbase::MutexLockGuard m(mu_);
     EventLoop::epoll_ptr_ = &epoller;
     condvar_.NotifyOne();
   }
+  EventChannel acceptor_chann(EventLoop::epoll_ptr_, acceptor_.Fd());
+  /* TODO: Here, WriteListenSocket and CloseListenSocket do nothing but just to be in consistence with 
+   * the EventChannel::Initialize. Fix it later. */
+  acceptor_chann.Initialize(std::bind(&TcpServer::ReadListenSocket, this), WriteListenSocket, CloseListenSocket);
+  acceptor_chann.AddIntoLoopWithRead();
   epoller.Run();
   /* Stop the threadpool. */
   eventloop_pool_.Shutdown();

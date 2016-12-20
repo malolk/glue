@@ -25,7 +25,7 @@ void EventChannel::HandleWrite() {
   }
 }
   
-void EventChannel::HandleClose() {  
+void EventChannel::HandleClose() { 
   epoll_ptr_->MustInLoopThread();
   if (close_cb_) {
     close_cb_();
