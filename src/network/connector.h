@@ -16,8 +16,8 @@ class Connector : private glue_libbase::Noncopyable {
   }
  private:
   /* Default non-blocking I/O. */
-  explicit Connector(const SocketAddress& server_addr, int non_block = 1) 
-    : server_addr_(server_addr) {
+  explicit Connector(const SocketAddress& server_addr, bool non_block = 1) 
+    : non_block_(non_block), server_addr_(server_addr) {
     int family = server_addr_.Family();
     if (family == AF_INET) {
       sockfd_ = Socket::NewSocket();
@@ -26,7 +26,6 @@ class Connector : private glue_libbase::Noncopyable {
     }
     LOG_CHECK(sockfd_ >= 0, "");
     Socket::EnablePortReuse(sockfd_, 1);
-    Socket::EnableNonBlock(sockfd_, non_block);
   }
 
   ~Connector() {
@@ -38,6 +37,7 @@ class Connector : private glue_libbase::Noncopyable {
     while (max_runs-- >= 0) {
       int ret = Socket::Connect(sockfd_, server_addr_);
       if (ret == 0) {
+        Socket::EnableNonBlock(sockfd_, non_block_);
         return sockfd_;
       } else if (ret == Socket::kERROR) {
         /* Error occured. */
@@ -52,6 +52,7 @@ class Connector : private glue_libbase::Noncopyable {
   }
 
   int sockfd_;
+  bool non_block_;
   const SocketAddress& server_addr_;
 };
 } // namespace glue_network
