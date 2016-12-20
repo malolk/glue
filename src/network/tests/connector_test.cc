@@ -13,10 +13,9 @@ void TestCase(const char* ip_str, uint16_t port, bool is_ipv6 = 0) {
   int fd = Connector::GetConnectedSocket(10, server_addr, 0); 
   SocketAddress client_addr;
   Socket::GetSockName(fd, client_addr);
-  LOG_INFO("\nSocket: %s connected to ::1:8080\n", client_addr.ToString().c_str());
 
   ByteBuffer buf;
-  int cnt = 10;
+  int cnt = 2;
   while (cnt-- > 0)	{
 	buf.AppendString(client_addr.ToString());
     LOG_INFO("client send content %s", buf.ToString().c_str());
@@ -27,6 +26,7 @@ void TestCase(const char* ip_str, uint16_t port, bool is_ipv6 = 0) {
 	buf.Reset();
 	sleep(1);
   }
+  Socket::Close(fd);
 }
 
 void TestIpv4(const char* ip_str, uint16_t port) {
