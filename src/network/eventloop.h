@@ -17,8 +17,8 @@
 namespace glue_network {
 class EventLoop: private glue_libbase::Noncopyable {
  public:
-  EventLoop() : epoll_ptr_(NULL), thread_(), 
-                mu_(), condvar_(mu_), running_(false) {
+  EventLoop() : running_(false), epoll_ptr_(NULL), thread_(), 
+                mu_(), condvar_(mu_) {
   }
 	
   /* epoll_ptr_ no need to be deleted, epoll sits on stack */
@@ -32,29 +32,32 @@ class EventLoop: private glue_libbase::Noncopyable {
   Epoll* EpollPtr() const {
     return epoll_ptr_;
   }
+
+  /* Thread-safe. */
+  void Stop() {
+    LOG_CHECK(epoll_ptr_, "");  
+    epoll_ptr_->Stop();
+  }
+
   int Join() {
     LOG_CHECK(!thread_.IsJoined(), "");
     return thread_.Join();
   }
 
-
   /* Usage: when master thread accepted a connection, 
    * it would wrap this function as a callback to 
-   * transfet a new connection to the corresponding epoll.
-   * This version will be used in server. */
-  void NewConnectionInClient(int fd, const Connection::CallbackReadType& read_cb,
-                             const Connection::CallbackInitType& init_cb);
-  /* This version will be used in server. */
+   * transfet a new connection to the corresponding epoll. */
   void NewConnection(int fd, const Connection::CallbackReadType& read_cb);
   void DeleteConnection(Connection* conn_ptr);
   void DeleteConnectionInLoop(std::shared_ptr<Connection> conn_shared_ptr);
+
  protected:
   void Routine();
+  std::atomic<bool> running_;
   Epoll* epoll_ptr_;
   glue_libbase::Thread thread_;
   glue_libbase::MutexLock mu_;
   glue_libbase::CondVar condvar_;
-  std::atomic<bool> running_;
   /* Here, every eventloop contains its own connection pool. */
   typedef std::unordered_map<Connection*, std::shared_ptr<Connection>> ConnectionPoolType;
   ConnectionPoolType conn_pool_;

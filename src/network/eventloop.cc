@@ -35,17 +35,6 @@ void EventLoop::NewConnection(int fd, const Connection::CallbackReadType& read_c
   conn_ptr->Initialize();
 }
 
-void EventLoop::NewConnectionInClient(int fd, const Connection::CallbackReadType& read_cb,
-                                      const Connection::CallbackInitType& init_cb) {
-  LOG_CHECK(fd >= 0, "");
-  std::shared_ptr<Connection> conn_ptr(new Connection(fd, epoll_ptr_));
-  conn_pool_[conn_ptr.get()] = conn_ptr;
-  conn_ptr->SetReadOperation(read_cb);
-  conn_ptr->SetCloseOperation(std::bind(&EventLoop::DeleteConnection, this, conn_ptr.get()));
-  conn_ptr->SetInitOperation(init_cb);
-  conn_ptr->Initialize();
-}
-
 /* When connection is closing, it will be invoked. 
  * Note: we can't pass the shared_ptr of connection to this callback, otherwise, 
  * it won't be destroyed since it exits in the connection itself. */
@@ -57,7 +46,8 @@ void EventLoop::DeleteConnection(Connection* conn_ptr) {
   /* Use RunLater not RunNowOrLater here, since it could ensure that all 
    * the events of this connection occured before this point will be processed 
    * before the current connection's destruction. */
-   epoll_ptr_->RunLater(std::bind(&EventLoop::DeleteConnectionInLoop, this, conn_backup));
+  epoll_ptr_->RunLater(std::bind(&EventLoop::DeleteConnectionInLoop, this, conn_backup));
+  LOG_INFO("connection on fd=%d is closing", conn_ptr->Fd());
 }
 
 void EventLoop::DeleteConnectionInLoop(std::shared_ptr<Connection> conn_shared_ptr) {
