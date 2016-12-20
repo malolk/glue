@@ -11,6 +11,8 @@ bool CompFunc(const int& lhs, const int& rhs) {
   return lhs < rhs;
 }
 
+typedef std::weak_ptr<glue_libbase::Element<int>> IntIdType;
+
 void Print(const std::vector<int> vec) {
   std::string ret;
   for (int i = 0; i < vec.size(); ++i) {
@@ -21,11 +23,17 @@ void Print(const std::vector<int> vec) {
 
 void TestCase(int ary_num, const std::vector<int>& vec) {
   std::vector<int> sorted_vec;
-  glue_libbase::Heap<int> heap(true, ary_num, CompFunc);
+  glue_libbase::Heap<int> heap(ary_num, CompFunc);
   Print(vec);
+  std::vector<IntIdType> id_vec;
   for (auto elem : vec) {
-    heap.Insert(elem);
+    id_vec.push_back(heap.Insert(elem));
   }
+  int result = 0;
+  LOG_INFO("Update num=%d", (heap.Get(id_vec.front(), result), result));
+  heap.Update(id_vec.front(), 1000);
+  LOG_INFO("Delete num=%d", (heap.Get(id_vec.back(), result), result));
+  heap.Delete(id_vec.back());
   while (!heap.Empty()) {
     sorted_vec.push_back(heap.TopAndPop());
   }
