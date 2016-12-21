@@ -34,7 +34,6 @@ class TimerQueue: private glue_libbase::Noncopyable {
    * id would be tied to the timer when id was not NULL. */
   void AddTimer(TimerIdType* id, const Timer& timer);
   void DelTimer(TimerIdType* id);
-  void UpdateTimer();
 
  private:
   void AddTimerInLoop(TimerIdType* id, const Timer& timer);

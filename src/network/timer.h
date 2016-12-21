@@ -10,13 +10,13 @@
 namespace glue_network {
 class Timer {
  public:
-  typedef std::fuction<void()> CallbackTimeoutType;
+  typedef std::function<void()> CallbackTimeoutType;
   /* when interval == 0, the timer will just timeout once at most. Otherwise, the next timeout time 
    * will be the sum of current time and the interval. */
   Timer(const CallbackTimeoutType& timeout_cb, int64_t expiration, int64_t interval = 0)
     : expiration_(expiration), interval_(interval), timeout_cb_(timeout_cb) {
     LOG_CHECK(interval_ >= 0, "");
-    if (!timout_cb_) {
+    if (!timeout_cb_) {
       LOG_FATAL("Every timer should be equipped with a valide timeout callback.");
     }
 	repeated_ = (interval_ == 0 ? false : true);
@@ -38,7 +38,7 @@ class Timer {
   }
 	
   int64_t GetExpiration() const {
-    return expiration;
+    return expiration_;
   }
 
   bool IsRepeated() const { 
