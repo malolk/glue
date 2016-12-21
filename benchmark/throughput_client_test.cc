@@ -1,12 +1,13 @@
-#include <network/TcpClient.h>
-#include <network/Buffer.h>
-#include <network/SocketAddress.h>
-#include <network/Connection.h>
-#include <network/Epoll.h>
-#include <network/EpollThreadPool.h>
-#include <libbase/Noncopyable.h>
-#include <libbase/Debug.h>
-#include <libbase/TimeStamp.h>
+#include "network/tcp_client.h"
+#include "network/buffer.h"
+#include "network/socket_address.h"
+#include "network/connection.h"
+#include "network/epoll.h"
+#include "network/timer.h"
+#include "network/eventloop_pool.h"
+#include "libbase/noncopyable.h"
+#include "libbase/logger.h"
+#include "libbase/timeutil.h"
 
 #include <vector>
 #include <string>
@@ -17,183 +18,182 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-using namespace network;
-using namespace libbase;
+using namespace glue_network;
+using namespace glue_libbase;
 
 ByteBuffer ball;
 
-class Client : private Noncopyable
-{
-public:
-	explicit Client(const csocket::SocketAddress& srvAddr)
-		: cli(srvAddr), recvBytes(0) 
-	{}
+class Client : private Noncopyable {
+ public:
+  explicit Client(const SocketAddress& server_addr)
+    : cli_(server_addr, 10), send_num_(0), running_(false) {
+  }
 
-	~Client() {}
+  ~Client() {
+  }
 
-	void start() 
-	{
-		cli.setReadOp(std::bind(&Client::readCallback, this, std::placeholders::_1, std::placeholders::_2));
-		cli.setInitOp(std::bind(&Client::initCallback, this, std::placeholders::_1)); 
-		cli.start(); 
-	}
-	void stop() { cli.stop(); }
-	void setEpoll(poller::Epoll* e) { cli.setEpoll(e); }
-    size_t getSentBytesNum() const  { return recvBytes; }
+  void Initialize() {
+    cli_.Initialize(std::bind(&Client::InitCallback, this, std::placeholders::_1), 
+                    std::bind(&Client::ReadCallback, this, std::placeholders::_1, std::placeholders::_2)); 
+  }
 
-private:
-	void readCallback(std::shared_ptr<SocketConnection::Connection>& conn,
-	ByteBuffer& buf);
-	void initCallback(std::shared_ptr<SocketConnection::Connection>& conn);
-	TcpClient cli;
-	size_t recvBytes;
+  void Start(Epoll* ep) {
+    cli_.Start(ep);
+  }
+
+  void Start(EventLoop* el) {
+    cli_.Start(el);
+  }
+
+  void Stop() {
+    running_ = false;
+  }
+
+  size_t GetSentNum() const {
+    return send_num_;
+  }
+ private:
+  void ReadCallback(std::shared_ptr<glue_network::Connection> conn, ByteBuffer& buf);
+  void InitCallback(std::shared_ptr<glue_network::Connection> conn);
+  TcpClient cli_;
+  size_t send_num_;
+  std::atomic<bool> running_;
 };
 
-void Client::readCallback(std::shared_ptr<SocketConnection::Connection>& conn,
-ByteBuffer& buf)
-{
-	LOGTRACE();
-	recvBytes += buf.readableBytes();
-	conn->sendData(buf);	
-	LOGTRACE();
+void Client::ReadCallback(std::shared_ptr<glue_network::Connection> conn, ByteBuffer& buf) {
+  if (!running_) {
+    conn->Close();
+  } else {
+    send_num_ += buf.ReadableBytes();
+    conn->Send(buf);  
+  }
 }
 
-void Client::initCallback(std::shared_ptr<SocketConnection::Connection>& conn)
-{
-	LOGTRACE();
-	ByteBuffer cpOfBall;
-	cpOfBall.appendBytes(ball);
-	conn->sendData(cpOfBall);		
-	LOGTRACE();
+void Client::InitCallback(std::shared_ptr<glue_network::Connection> conn) {
+  running_ = true;
+  ByteBuffer ball_backup;
+  ball_backup.AppendBuffer(ball);
+  conn->Send(ball_backup);    
 }
 
 // just like TcpServer
-class ClientCluster : private Noncopyable
-{
-public:
-	ClientCluster(const csocket::SocketAddress& srvAddrIn, 
-				  int clientNumIn,  int timeout, int threadSize)
-		: srvAddr(srvAddrIn),
-		  clientNum(clientNumIn),
-		  timeInSecs(timeout),
-	      threadNum(threadSize),
-		  epollMasterPtr(NULL),
-		  threadPool(threadSize)
-	{ }
+class ClientCluster : private Noncopyable {
+ public:
+  ClientCluster(const SocketAddress& server_addr, int client_num,  int time_range, int thread_num)
+    : server_addr_(server_addr), client_num_(client_num), thread_num_(thread_num),  
+      time_range_(time_range), epoll_ptr_(NULL), eventloop_pool_(thread_num - 1) { 
+  }
 
-	~ClientCluster() {}
+  ~ClientCluster() {}
 
-	void start() 
-	{
-		if(threadNum <= 0)
-		{
-			LOGWARN("thread pool size should be greater than zero");
-			return;	
-		}	
-		else
-		{
-			poller::Epoll epollMaster;
-			epollMaster.epollInitialize();
-			epollMasterPtr = &epollMaster;
-			
-			threadPool.setEpollMaster(&epollMaster);
-			threadPool.start();
-			
-			TimeStamp now;
-			now.addInterval(timeInSecs);
-			epollMaster.addTimer(now, std::bind(&ClientCluster::timeoutHandler, this), 0);
-			LOGTRACE();
-			
-			for(int index = 0; index < clientNum; ++index)
-			{
-				cliCluster.push_back(std::unique_ptr<Client>(new Client(srvAddr)));
-				cliCluster[index]->setEpoll(threadPool.nextEpoll());
-				cliCluster[index]->start();
-			}			
-			LOGTRACE();
-			
-			epollMaster.runEpoll();
-			LOGTRACE();
-			threadPool.shutdown();		
-			LOGTRACE();
-			
-			calcThroughput();		
-		}
-	}
-	
-private:
-	void timeoutHandler()
-	{
-		LOGTRACE();
-		for(int index = 0; index < clientNum; ++index)
-			cliCluster[index]->stop();				
-		LOGTRACE();
-		epollMasterPtr->stop();
-		LOGTRACE();
-	}
+  void Start() {
+    Epoll epoller;
+    epoller.Initialize();
+    epoll_ptr_ = &epoller;
+      
+    if (thread_num_ > 1) {
+      eventloop_pool_.Start();
+    }
+   
+    glue_network::Timer timer(std::bind(&ClientCluster::Timeout, this), glue_libbase::TimeUtil::NowMicros() + time_range_ * 1000000LL);
+    epoller.RunTimer(NULL, timer);
+    
+    for (int index = 0; index < client_num_; ++index) {
+      cli_cluster_.push_back(std::unique_ptr<Client>(new Client(server_addr_)));
+      cli_cluster_[index]->Initialize();
+      if (thread_num_ > 1 && (index % (client_num_))) {
+        cli_cluster_[index]->Start(eventloop_pool_.NextEventLoop());
+      } else {
+        cli_cluster_[index]->Start(epoll_ptr_);
+      }
+    }      
+    epoller.Run();
+    eventloop_pool_.Shutdown();
+    CalcThroughput();    
+  }
+  
+ private:
+  void Timeout() {
+    for (int index = 0; index < client_num_; ++index) {
+      cli_cluster_[index]->Stop();        
+    }
+    epoll_ptr_->Stop();
+  }
 
-	void calcThroughput()
-	{
-		long double sum = 0;
-		for(int index = 0; index < clientNum; ++index)	
-			sum += cliCluster[index]->getSentBytesNum();
-		std::cout << "Running Time=" << timeInSecs 
-		<< " " << "Received Bytes="<< sum 
-		<< " " << "Throughput="<< (static_cast<double>(sum)/static_cast<double>(1024 * 1024 * timeInSecs)) << " MiB/s" << std::endl;
-	}
-	csocket::SocketAddress srvAddr;
-	std::vector<std::unique_ptr<Client>> cliCluster;
-	const int clientNum;
-	const int timeInSecs;
-	const int threadNum;
-	poller::Epoll* epollMasterPtr;
-	poller::EpollThreadPool threadPool;
+  void CalcThroughput() {
+    long double sum = 0;
+    for (int index = 0; index < client_num_; ++index) { 
+      sum += cli_cluster_[index]->GetSentNum();
+    }
+    std::cout << "Running Time=" << time_range_
+              << " " << "Received Bytes="<< sum 
+              << " Throughput="<< (static_cast<double>(sum)/static_cast<double>(1024 * 1024 * time_range_)) 
+              << " MiB/s" << std::endl;
+  }
+
+  glue_network::SocketAddress server_addr_;
+  const int client_num_;
+  const int thread_num_;
+  const int time_range_;
+  glue_network::Epoll* epoll_ptr_;
+  std::vector<std::unique_ptr<Client>> cli_cluster_;
+  glue_network::EventLoopPool eventloop_pool_;
 };
 
-
-int main(int argc, char* argv[])
-{
-	int kBytes = 16;
-	int client = 20000;
-	int time = 30;
-	int thread = 1;
-	std::string ipStr = "127.0.0.1";
-	uint16_t port = 8080;
-	int opt;
-	while((opt = getopt(argc, argv, "s:p:c:k:t:T:")) != -1)
-	{
-		switch(opt)
-		{
-			case 's': ipStr = std::string(optarg);
-					  break;	
-#pragma GCC diagnostic ignored "-Wold-style-cast"					  
-			case 'p': port = (uint16_t)atoi(optarg);
-					  break;	
-#pragma GCC diagnostic error "-Wold-style-cast"					  
-			case 'c': client = atoi(optarg);
-					  break;	
-			case 'k': kBytes = atoi(optarg);
-					  break;	
-			case 't': time = atoi(optarg);
-					  break;	
-			case 'T': thread = atoi(optarg);
-					  break;
-			default:  std::cerr << "usage:" 
-					  "<ip> <port> <clients> <chunk size>" 
-					  "<time> <thread>" << std::endl;
-					  return 1;	
-		}				
-	}	
-	
-	const std::string unit = "0123456789";
-	for(int cnt = 0; cnt < kBytes*100; ++cnt)
-	{
-		ball.appendBytes(unit);	
-	}
-	
-	csocket::SocketAddress srvAddr(ipStr, port);	
-	ClientCluster cluster(srvAddr, client, time, thread);
-	cluster.start();
-	
-	return 0;	
+int main(int argc, char* argv[]) {
+  int kBytes = 16;
+  int client = 20000;
+  int time = 30;
+  int thread = 1;
+  std::string ip_str = "127.0.0.1";
+  uint16_t port = 8080;
+  int opt;
+  while ((opt = getopt(argc, argv, "s:p:c:k:t:T:")) != -1) {
+    switch (opt) {
+      case 's': {
+        ip_str = std::string(optarg);
+        break;  
+      }
+#pragma GCC diagnostic ignored "-Wold-style-cast"            
+      case 'p': {
+        port = (uint16_t)atoi(optarg);
+        break;  
+      }
+#pragma GCC diagnostic error "-Wold-style-cast"            
+      case 'c': { 
+        client = atoi(optarg);
+        break;  
+      }
+      case 'k': {
+        kBytes = atoi(optarg);
+        break;  
+      }
+      case 't': {
+        time = atoi(optarg);
+        break;  
+      }
+      case 'T': {
+        thread = atoi(optarg);
+        break;
+      }
+      default:  {
+        std::cerr << "usage:" 
+                     "<ip> <port> <clients> <chunk size>" 
+                     "<time> <thread>" 
+                  << std::endl;
+        return 1;
+      }
+    }        
+  }  
+  
+  const std::string unit = "0123456789";
+  for (int cnt = 0; cnt < kBytes*100; ++cnt) {
+    ball.AppendString(unit);  
+  }
+  
+  glue_network::SocketAddress server_addr(ip_str, port);  
+  ClientCluster cluster(server_addr, client, time, thread);
+  cluster.Start();
+  
+  return 0;  
 }

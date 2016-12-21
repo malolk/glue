@@ -8,7 +8,7 @@ do
 	do
 		echo RunningTime=${running_time}s, client_num=${client_num}, \
 		chunk_size=${chunk_size}, thread_num=${thread_num}
-		../bin/TestThroughputClient -c ${client_num} \
+		../bin/throughput_client_test -c ${client_num} \
 		-k ${chunk_size} -t ${running_time} -T ${thread_num} 
 		sleep 5
 	done

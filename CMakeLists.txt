@@ -38,10 +38,10 @@ add_subdirectory(src/network)
 add_subdirectory(src/libbase)
 
 if(NOT CMAKE_BUILD_NO_EXAMPLES)
-	add_subdirectory(src/httpd)
+    add_subdirectory(src/httpd)
 endif()
 
 if(NOT CMAKE_BUILD_NO_TESTS)
-	add_subdirectory(benchmark)
+    add_subdirectory(benchmark)
 endif()
 

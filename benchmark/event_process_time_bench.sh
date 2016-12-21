@@ -1,7 +1,7 @@
 #!/bin/bash
 
 WRITE_NUM=100000
-EXEC_PATH=../bin/TestEventProcessTime
+EXEC_PATH=../bin/event_process_time_test
 for client_num in 100 1000
 do
 	for pipe_num in 1000 5000 10000 15000 20000
