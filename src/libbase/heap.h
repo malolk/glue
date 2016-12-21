@@ -1,8 +1,8 @@
 #ifndef GLUE_LIBBASE_HEAP_H_
 #define GLUE_LIBBASE_HEAP_H_
 
-#include "noncopyable.h"
-#include "logger.h"
+#include "libbase/noncopyable.h"
+#include "libbase/logger.h"
 
 #include <vector>
 #include <functional>
