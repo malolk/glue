@@ -1,13 +1,15 @@
 #ifndef GLUE_NETWORK_EPOLL_H_
 #define GLUE_NETWORK_EPOLL_H_
 
-#include "socket.h"
-#include "event_channel.h"
-#include "../libbase/noncopyable.h"
-#include "../libbase/logger.h"
-#include "../libbase/mutexlock.h"
-#include "../libbase/timeutil.h"
-#include "../libbase/thread.h"
+#include "network/socket.h"
+#include "network/event_channel.h"
+#include "network/timer.h"
+#include "network/timer_queue.h"
+#include "libbase/noncopyable.h"
+#include "libbase/logger.h"
+#include "libbase/mutexlock.h"
+#include "libbase/timeutil.h"
+#include "libbase/thread.h"
 
 #include <vector>
 #include <unordered_set>
@@ -29,7 +31,7 @@ class Epoll: private glue_libbase::Noncopyable {
   Epoll()
     : epoll_fd_(-1), wakeup_fd_(-1), process_id_(-1), 
       wakeup_chann_(this), running_(false), is_handling_events_(false), 
-      events_(default_event_num_) { 
+      events_(default_event_num_), timer_queue_(this) { 
   }
 
   ~Epoll() { 	
@@ -49,6 +51,8 @@ class Epoll: private glue_libbase::Noncopyable {
   void DelChannel(EventChannel* );
   void UpdateChannel(EventChannel* );
 
+  void RunTimer(TimerQueue::TimerIdType* id, const Timer& timer);
+  void CancelTimer(TimerQueue::TimerIdType* id);
   int ThreadId() const {
     return process_id_;
   }
@@ -73,7 +77,7 @@ class Epoll: private glue_libbase::Noncopyable {
   std::vector<CallbackType> pending_requests_; 
   std::unordered_set<EventChannel*> channels_;
   glue_libbase::MutexLock mu_;
-
+  TimerQueue timer_queue_;
   static const size_t default_event_num_;
 };	
 } // namespace glue_network

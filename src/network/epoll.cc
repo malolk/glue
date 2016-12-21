@@ -1,5 +1,5 @@
-#include "epoll.h"
-#include "event_channel.h"
+#include "network/epoll.h"
+#include "network/event_channel.h"
 
 #include <functional>
 #include <algorithm>
@@ -22,6 +22,15 @@ void Epoll::Initialize() {
                           std::bind(&Epoll::WriteWakeupChannel, this),
                           std::bind(&Epoll::CloseWakeupChannel, this), wakeup_fd_);
   wakeup_chann_.AddIntoLoopWithRead();
+  timer_queue_.Initialize();
+}
+
+void Epoll::RunTimer(TimerQueue::TimerIdType* id, const Timer& timer) {
+  timer_queue_.AddTimer(id, timer);
+}
+
+void Epoll::CancelTimer(TimerQueue::TimerIdType* id) {
+  timer_queue_.DelTimer(id);  
 }
 
 void Epoll::MustInLoopThread() {

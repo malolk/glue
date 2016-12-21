@@ -1,15 +1,12 @@
-#include "eventloop.h"
+#include "network/eventloop.h"
 
 namespace glue_network {
 void EventLoop::Routine() {
   Epoll epoller;
   epoller.Initialize();
-  TimerQueue timer_queue(&epoller);
-  timer_queue.Initialize();
   {
     glue_libbase::MutexLockGuard m(mu_);
 	epoll_ptr_ = &epoller;
-    timer_queue_ptr_ = &timer_queue;
 	condvar_.NotifyOne();
   }
   running_ = true;
@@ -29,22 +26,23 @@ Epoll* EventLoop::Start() {
   return epoll_ptr_;
 }
 
-void EventLoop::RunTimer(TimerQueue::TimerIdType* id, const Timer& timer) {
-  LOG_CHECK(timer_queue_ptr_, "");
-  timer_queue_ptr_->AddTimer(id, timer);
-} 
-
-void EventLoop::CancelTimer(TimerQueue::TimerIdType* id) {
-  LOG_CHECK(timer_queue_ptr_, "");
-  timer_queue_ptr_->DelTimer(id); 
-}
-
 void EventLoop::NewConnection(int fd, const Connection::CallbackReadType& read_cb) {
   LOG_CHECK(fd >= 0, "");
   std::shared_ptr<Connection> conn_ptr(new Connection(fd, epoll_ptr_));
   conn_pool_[conn_ptr.get()] = conn_ptr;
   conn_ptr->SetReadOperation(read_cb);
   conn_ptr->SetCloseOperation(std::bind(&EventLoop::DeleteConnection, this, conn_ptr.get()));
+  conn_ptr->Initialize();
+}
+
+void EventLoop::NewConnectionOfClient(int fd, const Connection::CallbackReadType& read_cb,
+                                              const Connection::CallbackInitType& init_cb) {
+  LOG_CHECK(fd >= 0, "");
+  std::shared_ptr<Connection> conn_ptr(new Connection(fd, epoll_ptr_));
+  conn_pool_[conn_ptr.get()] = conn_ptr;
+  conn_ptr->SetReadOperation(read_cb);
+  conn_ptr->SetCloseOperation(std::bind(&EventLoop::DeleteConnection, this, conn_ptr.get()));
+  conn_ptr->SetInitOperation(init_cb);
   conn_ptr->Initialize();
 }
 
