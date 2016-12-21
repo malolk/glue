@@ -46,7 +46,7 @@ class Heap: private Noncopyable {
   T& Top();
   /* Use weak_ptr to detect whether the element is still exit in the array_. */
   std::weak_ptr<Element<T>> Insert(const T& data);
-  std::weak_ptr<Element<T>> GetTopId();
+  std::weak_ptr<Element<T>> GetTopId() const;
   int Delete(std::weak_ptr<Element<T>>& id);
   int Update(std::weak_ptr<Element<T>>& id, const T& data);
   int Get(const std::weak_ptr<Element<T>>& id, T& result) const {
@@ -116,9 +116,6 @@ void Heap<T>::Sink(int index) {
   LOG_CHECK(index >= 0 && index < size_, "");
   int parent_index = index;
   int child_index = index * ary_num_ + 1;
-  if (child_index >= size_) {
-    return;
-  }
   std::shared_ptr<Element<T>> tmp = array_[parent_index];
   while (child_index < size_) {
     int right_most = (child_index + ary_num_) < size_ ? (child_index + ary_num_) : size_;
