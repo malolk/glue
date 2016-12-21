@@ -1,4 +1,4 @@
-#include "../socket_address.h"
+#include "network/socket_address.h"
 
 typedef glue_network::SocketAddress::AddrType AddrType;
 typedef glue_network::SocketAddress::AddrType4 AddrType4;

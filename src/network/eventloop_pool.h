@@ -1,10 +1,10 @@
 #ifndef GLUE_NETWORK_EVENTLOOP_POOL_H_
 #define GLUE_NETWORK_EVENTLOOP_POOL_H_
 
-#include "epoll.h"
-#include "eventloop.h"
-#include "event_channel.h"
-#include "../libbase/logger.h"
+#include "network/epoll.h"
+#include "network/eventloop.h"
+#include "network/event_channel.h"
+#include "libbase/logger.h"
 
 #include <vector>
 #include <memory>

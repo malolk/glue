@@ -1,4 +1,4 @@
-#include "connection.h"
+#include "network/connection.h"
 
 namespace glue_network {
 void Connection::Initialize() {

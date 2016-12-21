@@ -1,10 +1,10 @@
 #ifndef GLUE_NETWORK_CONNECTOR_H_
 #define GLUE_NETWORK_CONNECTOR_H_
 
-#include "socket.h"
-#include "socket_address.h"
-#include "../libbase/noncopyable.h"
-#include "../libbase/logger.h"
+#include "network/socket.h"
+#include "network/socket_address.h"
+#include "libbase/noncopyable.h"
+#include "libbase/logger.h"
 
 namespace glue_network {
 class Connector : private glue_libbase::Noncopyable {
@@ -17,7 +17,7 @@ class Connector : private glue_libbase::Noncopyable {
  private:
   /* Default non-blocking I/O. */
   explicit Connector(const SocketAddress& server_addr, bool non_block = 1) 
-    : non_block_(non_block), server_addr_(server_addr) {
+    : sockfd_(-1), non_block_(non_block), server_addr_(server_addr) {
     int family = server_addr_.Family();
     if (family == AF_INET) {
       sockfd_ = Socket::NewSocket();

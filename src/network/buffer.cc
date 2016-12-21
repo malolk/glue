@@ -1,4 +1,4 @@
-#include "buffer.h"
+#include "network/buffer.h"
 
 #include <unistd.h>
 #include <errno.h>
@@ -99,7 +99,7 @@ void ByteBuffer::SpareSpace(size_t size) {
 
 void ByteBuffer::MoveReadPos(size_t size) {
   if (size > ReadableBytes()) {
-    LOG_CHECK(size <= ReadableBytes(), "");
+    LOG_WARN("buffer readable bytes=%d move bytes=%d", ReadableBytes(), size);
 	size = ReadableBytes();
   }
   read_pos_ += size;

@@ -1,7 +1,7 @@
 #ifndef GLUE_NETWORK_BYTEBUFFER_H_
 #define GLUE_NETWORK_BYTEBUFFER_H_
 
-#include "../libbase/logger.h"
+#include "libbase/logger.h"
 
 #include <vector>
 #include <string>

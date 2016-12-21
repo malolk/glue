@@ -1,6 +1,6 @@
-#include "event_channel.h"
-#include "epoll.h"
-#include "../libbase/logger.h"
+#include "network/event_channel.h"
+#include "network/epoll.h"
+#include "libbase/logger.h"
 
 namespace glue_network {  
 void EventChannel::HandleRead() {  

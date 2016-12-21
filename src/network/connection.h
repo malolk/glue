@@ -1,13 +1,13 @@
 #ifndef NETWORK_CONNECTION_H
 #define NETWORK_CONNECTION_H
 
-#include "socket.h"
-#include "epoll.h"
-#include "buffer.h"
+#include "network/socket.h"
+#include "network/epoll.h"
+#include "network/buffer.h"
 #include "event_channel.h"
-#include "../libbase/noncopyable.h"
-#include "../libbase/timeutil.h"
-#include "../libbase/logger.h"
+#include "libbase/noncopyable.h"
+#include "libbase/timeutil.h"
+#include "libbase/logger.h"
 
 #include <functional>
 #include <memory>

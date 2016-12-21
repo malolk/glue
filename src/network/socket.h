@@ -1,9 +1,9 @@
 #ifndef GLUE_NETWORK_SOCKET_H_
 #define GLUE_NETWORK_SOCKET_H_
 
-#include "buffer.h"
-#include "socket_address.h"
-#include "../libbase/logger.h"
+#include "network/buffer.h"
+#include "network/socket_address.h"
+#include "libbase/logger.h"
 
 #include <string>
 

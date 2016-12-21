@@ -1,11 +1,11 @@
 #ifndef GLUE_NETWORK_TIMERQUEUE_H_
 #define GLUE_NETWORK_TIMERQUEUE_H_
 
-#include "timer.h"
-#include "event_channel.h"
-#include "../libbase/heap.h"
-#include "../libbase/noncopyable.h"
-#include "../libbase/timeutil.h"
+#include "network/timer.h"
+#include "network/event_channel.h"
+#include "libbase/heap.h"
+#include "libbase/noncopyable.h"
+#include "libbase/timeutil.h"
 
 #include <utility>
 #include <memory>

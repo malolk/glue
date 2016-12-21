@@ -1,6 +1,6 @@
-#include "../acceptor.h"
-#include "../socket.h"
-#include "../socket_address.h"
+#include "network/acceptor.h"
+#include "network/socket.h"
+#include "network/socket_address.h"
 
 #include <string>
 

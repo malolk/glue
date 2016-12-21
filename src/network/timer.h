@@ -1,9 +1,9 @@
 #ifndef GLUE_NETWORK_TIMER_H_
 #define GLUE_NETWORK_TIMER_H_
 
-#include "../libbase/noncopyable.h"
-#include "../libbase/timeutil.h"
-#include "../libbase/logger.h"
+#include "libbase/noncopyable.h"
+#include "libbase/timeutil.h"
+#include "libbase/logger.h"
 
 #include <functional>
 

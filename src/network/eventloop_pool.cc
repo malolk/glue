@@ -1,7 +1,8 @@
-#include "eventloop_pool.h"
+#include "network/eventloop_pool.h"
 
 namespace glue_network {
 EventLoop* EventLoopPool::NextEventLoop() {
+  LOG_CHECK(pool_size_ >= 1, "pool is empty");
   EventLoop* ret = pool_[dispatch_id_++].get();
   if (dispatch_id_ == pool_size_) {
     dispatch_id_ = 0;

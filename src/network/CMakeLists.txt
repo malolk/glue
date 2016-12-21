@@ -1,4 +1,4 @@
-file(GLOB network_SRCS "*.cpp")
+file(GLOB network_SRCS "*.cc")
 
 add_library(glue_network ${network_SRCS})
 target_link_libraries(glue_network glue_libbase pthread )

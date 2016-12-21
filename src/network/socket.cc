@@ -1,5 +1,5 @@
-#include "socket.h"
-#include "../libbase/logger.h"
+#include "network/socket.h"
+#include "libbase/logger.h"
 
 #include <sys/uio.h>
 #include <errno.h>
@@ -115,7 +115,7 @@ ssize_t Socket::Receive(int sockfd, ByteBuffer& buf) {
   buf_array[1].iov_len = BACKUP_BUF_SIZE;
 
   ssize_t recv_num = 0;
-  int try_times = 0, ret_flag = 1;
+  int try_times = 0;
   do {
     recv_num = ::readv(sockfd, buf_array, 2);
     if (recv_num >= 0) {

@@ -1,17 +1,17 @@
 #ifndef GLUE_NETWORK_TCPSERVER_H_
 #define GLUE_NETWORK_TCPSERVER_H_
 
-#include "buffer.h"
-#include "socket.h"
-#include "socket_address.h"
-#include "epoll.h"
-#include "connection.h"
-#include "eventloop_pool.h"
-#include "acceptor.h"
-#include "../libbase/mutexlock.h"
-#include "../libbase/condvar.h"
-#include "../libbase/noncopyable.h"
-#include "../libbase/logger.h"
+#include "network/buffer.h"
+#include "network/socket.h"
+#include "network/socket_address.h"
+#include "network/epoll.h"
+#include "network/connection.h"
+#include "network/eventloop_pool.h"
+#include "network/acceptor.h"
+#include "libbase/mutexlock.h"
+#include "libbase/condvar.h"
+#include "libbase/noncopyable.h"
+#include "libbase/logger.h"
 
 #include <string>
 #include <memory>

@@ -1,11 +1,11 @@
 #ifndef GLUE_NETWORK_ACCEPTOR_H_
 #define GLUE_NETWORK_ACCEPTOR_H_
 
-#include "../libbase/logger.h"
-#include "../libbase/noncopyable.h"
-#include "buffer.h"
-#include "socket.h"
-#include "socket_address.h"
+#include "libbase/logger.h"
+#include "libbase/noncopyable.h"
+#include "network/buffer.h"
+#include "network/socket.h"
+#include "network/socket_address.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
