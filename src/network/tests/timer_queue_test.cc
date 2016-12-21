@@ -1,5 +1,6 @@
-#include "../eventloop.h"
-#include "../timer.h"
+#include "network/epoll.h"
+#include "network/eventloop.h"
+#include "network/timer.h"
 
 #include <unistd.h>
 
@@ -14,15 +15,16 @@ void NonRepeated() {
 int main() {
   glue_network::Timer timer_oneshot(NonRepeated, glue_libbase::TimeUtil::NowMicros() + 5000000LL); /* After 5 seconds. */
   glue_network::Timer timer_repeated(Repeated, 0, 2000000LL); /* Every 2 seconds. */
-  glue_network::EventLoop event_loop;
-  event_loop.Start();
-  event_loop.RunTimer(NULL, timer_oneshot);
+  glue_network::EventLoop eventloop;
+  eventloop.Start();
+  glue_network::Epoll* epoll_ptr = eventloop.EpollPtr();
+  epoll_ptr->RunTimer(NULL, timer_oneshot);
   glue_network::TimerQueue::TimerIdType id;
-  event_loop.RunTimer(&id, timer_repeated);
+  epoll_ptr->RunTimer(&id, timer_repeated);
   sleep(6);
-  event_loop.CancelTimer(&id);
+  epoll_ptr->CancelTimer(&id);
   sleep(2);
-  event_loop.Stop();
-  event_loop.Join();
+  eventloop.Stop();
+  eventloop.Join();
   sleep(1);
 }
