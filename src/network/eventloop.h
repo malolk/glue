@@ -3,6 +3,8 @@
 
 #include "epoll.h"
 #include "connection.h"
+#include "timer.h"
+#include "timer_queue.h"
 #include "../libbase/noncopyable.h"
 #include "../libbase/logger.h"
 #include "../libbase/thread.h"
@@ -17,8 +19,8 @@
 namespace glue_network {
 class EventLoop: private glue_libbase::Noncopyable {
  public:
-  EventLoop() : running_(false), epoll_ptr_(NULL), thread_(), 
-                mu_(), condvar_(mu_) {
+  EventLoop() : running_(false), epoll_ptr_(NULL), timer_queue_ptr_(NULL), 
+                thread_(), mu_(), condvar_(mu_) {
   }
 	
   /* epoll_ptr_ no need to be deleted, epoll sits on stack */
@@ -50,11 +52,15 @@ class EventLoop: private glue_libbase::Noncopyable {
   void NewConnection(int fd, const Connection::CallbackReadType& read_cb);
   void DeleteConnection(Connection* conn_ptr);
   void DeleteConnectionInLoop(std::shared_ptr<Connection> conn_shared_ptr);
+  
+  void RunTimer(TimerQueue::TimerIdType* id, const Timer& timer);
+  void CancelTimer(TimerQueue::TimerIdType* id);
 
  protected:
   void Routine();
   std::atomic<bool> running_;
   Epoll* epoll_ptr_;
+  TimerQueue* timer_queue_ptr_;
   glue_libbase::Thread thread_;
   glue_libbase::MutexLock mu_;
   glue_libbase::CondVar condvar_;

@@ -4,9 +4,12 @@ namespace glue_network {
 void EventLoop::Routine() {
   Epoll epoller;
   epoller.Initialize();
+  TimerQueue timer_queue(&epoller);
+  timer_queue.Initialize();
   {
     glue_libbase::MutexLockGuard m(mu_);
 	epoll_ptr_ = &epoller;
+    timer_queue_ptr_ = &timer_queue;
 	condvar_.NotifyOne();
   }
   running_ = true;
@@ -24,6 +27,16 @@ Epoll* EventLoop::Start() {
     }
   }
   return epoll_ptr_;
+}
+
+void EventLoop::RunTimer(TimerQueue::TimerIdType* id, const Timer& timer) {
+  LOG_CHECK(timer_queue_ptr_, "");
+  timer_queue_ptr_->AddTimer(id, timer);
+} 
+
+void EventLoop::CancelTimer(TimerQueue::TimerIdType* id) {
+  LOG_CHECK(timer_queue_ptr_, "");
+  timer_queue_ptr_->DelTimer(id); 
 }
 
 void EventLoop::NewConnection(int fd, const Connection::CallbackReadType& read_cb) {
