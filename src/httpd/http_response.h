@@ -1,9 +1,9 @@
-#ifndef HTTP_RESPONSE_H
-#define HTTP_RESPONSE_H
+#ifndef GLUE_HTTP_RESPONSE_H_
+#define GLUE_HTTP_RESPONSE_H_
 
-#include "../network/Connection.h"
-#include "../network/Buffer.h"
-#include "../libbase/Debug.h"
+#include "network/connection.h"
+#include "network/buffer.h"
+#include "libbase/logger.h"
 
 #include <vector>
 #include <string>
@@ -16,31 +16,27 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-namespace network
-{
-namespace httpd
-{
-class HttpResponse
-{
-public:
-	typedef std::shared_ptr<network::SocketConnection::Connection> ConnectionPtr;
-	typedef network::ByteBuffer Buf;
-	explicit HttpResponse(const ConnectionPtr& connIn): conn(connIn)
-	{}
-	~HttpResponse() {}
+namespace glue_httpd {
+class HttpResponse {
+ public:
+  typedef std::shared_ptr<glue_network::Connection> ConnectionPtr;
+  typedef glue_network::ByteBuffer Buf;
+  explicit HttpResponse(const ConnectionPtr& conn): conn_(conn) {
+  }
+  
+  ~HttpResponse() {}
 
-	void sendStatusPage(const std::string& status, const std::string& msg);
-	void sendFile(const std::string& path, size_t length);
-	void send(Buf& buf, const std::string& fileType);
-private:
-	std::string getFileType(const std::string& path);
-	std::string getFileName(const std::string& path);
-	std::string getReason(const std::string& status);
-	std::string getMimeType(const std::string& str);
-	std::string toHeader(const std::string& key, const std::string& value);
-	std::string toHeaderPart(const std::string& fileType, size_t length, const std::string& status);
-	ConnectionPtr conn;
+  void SendStatusPage(const std::string& status, const std::string& msg);
+  void SendFile(const std::string& path, size_t length);
+  void Send(Buf& buf, const std::string& file_type);
+ private:
+  std::string GetFileType(const std::string& path);
+  std::string GetFileName(const std::string& path);
+  std::string GetReason(const std::string& status);
+  std::string GetMimeType(const std::string& str);
+  std::string ToHeader(const std::string& key, const std::string& value);
+  std::string ToHeaderPart(const std::string& file_type, size_t length, const std::string& status);
+  ConnectionPtr conn_;
 };
-}
-}
-#endif
+} // namespace glue_httpd
+#endif // GLUE_HTTP_RESPONSE_H_

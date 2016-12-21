@@ -1,32 +1,27 @@
-#ifndef HTTP_SERVER_H
-#define HTTP_SERVER_H
+#ifndef GLUE_HTTP_SERVER_H_
+#define GLUE_HTTP_SERVER_H_
 
-#include "../network/TcpServer.h"
-#include "../network/Connection.h"
-#include "../network/Buffer.h"
+#include "network/tcp_server.h"
+#include "network/connection.h"
+#include "network/buffer.h"
+#include "network/socket_address.h"
+#include "libbase/noncopyable.h"
 
 #include <string>
 #include <memory>
 
-namespace network
-{
-namespace httpd
-{
-class HttpServer: private libbase::Noncopyable
-{
-public:
-	typedef std::shared_ptr<network::SocketConnection::Connection> ConnectionPtr;
-	explicit HttpServer(const std::string& ipStrIn, 
-	uint16_t portIn = 8080,
-	int threadSize = poller::WORKERSIZE + 1)
-	: server(ipStrIn, portIn, threadSize) 
-	{}
+namespace glue_httpd {
+class HttpServer: private glue_libbase::Noncopyable {
+ public:
+  typedef std::shared_ptr<glue_network::Connection> ConnectionPtr;
+  HttpServer(const glue_network::SocketAddress& server_addr, int thread_num)
+    : server_(server_addr, thread_num, CallbackOnRequest) {
+  }
 
-	void start();
+  void Start();
 private:
-	void callbackOnRequest(ConnectionPtr& connPtr, ByteBuffer& buf);
-	TcpServer server;	
-}; 	
-}
-}
-#endif
+  static void CallbackOnRequest(ConnectionPtr conn, glue_network::ByteBuffer& buf);
+  glue_network::TcpServer server_;
+};
+} // namespace glue_httpd
+#endif // GLUE_HTTP_SERVER_H_

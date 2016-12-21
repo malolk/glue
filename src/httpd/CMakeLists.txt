@@ -1,4 +1,4 @@
-file(GLOB httpd_SRCS "*.cpp")
+file(GLOB httpd_SRCS "*.cc")
 
 add_library(glue_httpd ${httpd_SRCS})
 target_link_libraries(glue_httpd glue_network)

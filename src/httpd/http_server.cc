@@ -1,30 +1,19 @@
-#include "HttpServer.h"
-#include "HttpRequest.h"
-#include "HttpResponse.h"
+#include "httpd/http_server.h"
+#include "httpd/http_request.h"
+#include "httpd/http_response.h"
 
 #include <functional>
 
-using namespace network;
-using namespace network::httpd;
-using namespace network::SocketConnection;
-
-void HttpServer::callbackOnRequest(ConnectionPtr& connPtr, ByteBuffer& buf)
-{
-	HttpRequest httpReq(connPtr);
-	if (httpReq.isAlready(buf))
-	{
-		LOGTRACE();
-		httpReq.doRequest(buf);
-		LOGTRACE();
-		connPtr->shutdown();
-		LOGTRACE();
-	}
+namespace glue_httpd {
+void HttpServer::CallbackOnRequest(ConnectionPtr conn, glue_network::ByteBuffer& buf) {
+  HttpRequest http_req(conn);
+  if (http_req.IsAlready(buf)) {
+	http_req.DoRequest(buf);
+	conn->Shutdown();
+  }
 }
 
-void HttpServer::start()
-{
-	server.setReadOp(std::bind(&HttpServer::callbackOnRequest, this, std::placeholders::_1, std::placeholders::_2));
-	server.startServer();
+void HttpServer::Start() {
+  server_.Run();
 }
-
-
+} // namespace glue_httpd

@@ -1,9 +1,9 @@
-#ifndef HTTP_REQUEST_H
-#define HTTP_REQUEST_H
+#ifndef GLUE_HTTP_REQUEST_H_
+#define GLUE_HTTP_REQUEST_H_
 
-#include "../network/Connection.h"
-#include "../network/Buffer.h"
-#include "../libbase/Debug.h"
+#include "network/connection.h"
+#include "network/buffer.h"
+#include "libbase/logger.h"
 
 #include <vector>
 #include <string>
@@ -18,56 +18,50 @@
 #include <string.h>
 #include <unistd.h>
 
-namespace network
-{
-namespace httpd
-{
+namespace glue_httpd {
+class HttpRequest {
+ public:
+  typedef std::shared_ptr<glue_network::Connection> ConnectionPtr;
+  typedef struct stat PathStat;
+  typedef glue_network::ByteBuffer Buf;
+  explicit HttpRequest(const ConnectionPtr& conn): conn_(conn) { 
+  }
 
-class HttpRequest
-{
-public:
-	typedef std::shared_ptr<network::SocketConnection::Connection> ConnectionPtr;
-	typedef struct stat PathStat;
-	typedef network::ByteBuffer Buf;
-	explicit HttpRequest(const ConnectionPtr& connIn): conn(connIn)
-	{ }
+  ~HttpRequest() {
+  }
 
-	~HttpRequest() {}
+  bool IsAlready(const Buf& buf);
+  void DoRequest(Buf& buf);
 
-	bool isAlready(const Buf& buf);
-	void doRequest(Buf& buf);
-
-private:
-	void doMethod();
-	void doCgi(const std::string& path);
-	void methodGet();
-	void methodPost();
-	void methodNull();
-	bool getFileInfo(const std::string& path, PathStat& pathStat);
-	bool isDirectory(const PathStat& pathStat);
-	bool isRegular(const PathStat& pathStat);
-	bool isCgi(const PathStat& pathStat);
+ private:
+  void DoMethod();
+  void DoCgi(const std::string& path);
+  void GetMethod();
+  void PostMethod();
+  void NullMethod();
+  bool GetFileInfo(const std::string& path, PathStat& path_stat);
+  bool IsDirectory(const PathStat& path_stat);
+  bool IsRegular(const PathStat& path_stat);
+  bool IsCgi(const PathStat& path_stat);
 	
-	void extractMethod(const std::string& line);
-	void extractHeader(Buf& buf);
-	void extractBody(Buf& buf);
+  void ExtractMethod(const std::string& line);
+  void ExtractHeader(Buf& buf);
+  void ExtractBody(Buf& buf);
 
-	void handleError(const std::string& status, const std::string& msg) const;
-	std::string getQueryStr(const std::string& urlIn);
-	std::string getPath(const std::string& urlIn);
-	bool closeWrapper(int fd);
+  void HandleError(const std::string& status, const std::string& msg) const;
+  std::string GetQueryStr(const std::string& url);
+  std::string GetPath(const std::string& url);
+  bool CloseWrapper(int fd);
 
-	std::pair<std::string, std::string> getHeader(const std::string& line);
-	std::string getOneLine(const Buf& buf);
+  std::pair<std::string, std::string> GetHeader(const std::string& line);
+  std::string GetOneLine(const Buf& buf);
 
-	ConnectionPtr conn;	
-	std::string method;
-	std::string url;
-	std::string version;
-	std::map<std::string, std::string> headers;
-	std::string body;	
+  ConnectionPtr conn_;	
+  std::string method_;
+  std::string url_;
+  std::string version_;
+  std::map<std::string, std::string> headers_;
+  std::string body_;	
 };
-	
-}
-}
-#endif
+} // namespace glue_httpd
+#endif // GLUE_HTTP_REQUEST_H_
