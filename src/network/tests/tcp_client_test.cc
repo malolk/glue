@@ -1,6 +1,6 @@
-#include "../tcp_client.h"
-#include "../socket_address.h"
-#include "../connection.h"
+#include "network/tcp_client.h"
+#include "network/socket_address.h"
+#include "network/connection.h"
 
 #include <memory>
 
