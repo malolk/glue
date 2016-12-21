@@ -1,26 +1,38 @@
-add_executable(TestBuffer TestBuffer.cpp)
-target_link_libraries(TestBuffer glue_network)
+add_executable(buffer_test buffer_test.cc)
+target_link_libraries(buffer_test glue_network)
 
-add_executable(TestEpoll TestEpoll.cpp)
-target_link_libraries(TestEpoll glue_network)
+add_executable(epoll_test epoll_test.cc)
+target_link_libraries(epoll_test glue_network)
 
-add_executable(TestSocketAddr TestSocketAddr.cpp)
-target_link_libraries(TestSocketAddr glue_network)
+add_executable(socket_address_test socket_address_test.cc)
+target_link_libraries(socket_address_test glue_network)
 
-add_executable(TestSocketClient TestSocketClient.cpp)
-target_link_libraries(TestSocketClient glue_network)
+add_executable(socket_client_test socket_client_test.cc)
+target_link_libraries(socket_client_test glue_network)
 
-add_executable(TestSocketServer TestSocketServer.cpp)
-target_link_libraries(TestSocketServer glue_network)
+add_executable(socket_server_test socket_server_test.cc)
+target_link_libraries(socket_server_test glue_network)
 
-add_executable(TestTcpServer TestTcpServer.cpp)
-target_link_libraries(TestTcpServer glue_network)
+add_executable(tcp_server_test tcp_server_test.cc)
+target_link_libraries(tcp_server_test glue_network)
 
-add_executable(TestTimerQueue TestTimerQueue.cpp)
-target_link_libraries(TestTimerQueue glue_network)
+add_executable(tcp_server_test1 tcp_server_test1.cc)
+target_link_libraries(tcp_server_test1 glue_network)
 
-add_executable(TestTimerQueue1 TestTimerQueue1.cpp)
-target_link_libraries(TestTimerQueue1 glue_network)
+add_executable(timer_queue_test timer_queue_test.cc)
+target_link_libraries(timer_queue_test glue_network)
 
-add_executable(TestTcpClient TestTcpClient.cpp)
-target_link_libraries(TestTcpClient glue_network)
+add_executable(tcp_client_test tcp_client_test.cc)
+target_link_libraries(tcp_client_test glue_network)
+
+add_executable(acceptor_test acceptor_test.cc)
+target_link_libraries(acceptor_test glue_network)
+
+add_executable(connector_test connector_test.cc)
+target_link_libraries(connector_test glue_network)
+
+add_executable(eventloop_test eventloop_test.cc)
+target_link_libraries(eventloop_test glue_network)
+
+add_executable(eventloop_pool_test eventloop_pool_test.cc)
+target_link_libraries(eventloop_pool_test glue_network)
