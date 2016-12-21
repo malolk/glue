@@ -1,8 +1,4 @@
-/*
-#include <libbase/thread.h>
-*/
-
-#include "thread.h"
+#include "libbase/thread.h"
 
 namespace glue_libbase {
 namespace glue_libbase_thread {
@@ -111,7 +107,7 @@ void Thread::Run() {
       break;
     }
   }
-  int unfinished_task_num = bqueue_.size();
+  size_t unfinished_task_num = bqueue_.size();
   if (unfinished_task_num) {
     LOG_WARN("Thread[%d] exits with %d unfinished task(s)", process_id_, unfinished_task_num);
   }

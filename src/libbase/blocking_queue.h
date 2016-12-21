@@ -1,15 +1,9 @@
 #ifndef GLUE_LIBBASE_BLOCKINGQUEUE_H_
 #define GLUE_LIBBASE_BLOCKINGQUEUE_H_
 
-/*
-#include <libbase/mutexlock.h>
-#include <libbase/condvar.h>
-#include <libbase/noncopyable.h>
-*/
-
-#include "mutexlock.h"
-#include "condvar.h"
-#include "noncopyable.h"
+#include "libbase/mutexlock.h"
+#include "libbase/condvar.h"
+#include "libbase/noncopyable.h"
 
 #include <deque>
 

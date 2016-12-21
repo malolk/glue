@@ -20,7 +20,7 @@ class TimeUtil {
   static int64_t ElapsedMicros(const int64_t& start_micros);
   static int64_t ElapsedSeconds(const int64_t& start_micros);
  private:
-  static int ToStringOfMicros(char* buf, int16_t len, int8_t flag);
+  static int ToStringOfMicros(char* buf, int len, int flag);
 };
 }
 #endif // GLUE_LIBBASE_TIMEUTIL_H_

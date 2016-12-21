@@ -1,10 +1,10 @@
 #ifndef GLUE_LIBBASE_WAITMEMBER_H_
 #define GLUE_LIBBASE_WAITMEMBER_H_
 
-#include "logger.h"
-#include "condvar.h"
-#include "mutexlock.h"
-#include "noncopyable.h"
+#include "libbase/logger.h"
+#include "libbase/condvar.h"
+#include "libbase/mutexlock.h"
+#include "libbase/noncopyable.h"
 
 namespace glue_libbase {
 class WaitMember: private Noncopyable {

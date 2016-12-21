@@ -8,17 +8,17 @@
 using namespace std;
 
 void task1() {
-  cout << "task: Current thread id: " << glue_libbase::tid() << endl;
+  cout << "task: Current thread id: " << glue_libbase::ThreadId() << endl;
 }
 
 void task2(int sec) {
-  cout << "task1: Current thread id: " << glue_libbase::tid() << endl;
+  cout << "task1: Current thread id: " << glue_libbase::ThreadId() << endl;
   sleep(sec);
 }
 
 
 int main() {
-  cout << "Process ID: " << glue_libbase::tid() << endl;
+  cout << "Process ID: " << glue_libbase::ThreadId() << endl;
   std::function<void()> func = std::bind(task2, 2), func1 = task1, func2 = task1; 
   std::function<void()> func3 = std::bind(task2, 3);
 

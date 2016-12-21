@@ -1,15 +1,8 @@
 #ifndef GLUE_LIBBASE_CONDVAR_H_
 #define GLUE_LIBBASE_CONDVAR_H_
 
-/*
-#include <libbase/mutexlock.h>
-#include <libbase/noncopyable.h>
-#include <libbase/debug.h>
-*/
-
-//#include "debug.h"
-#include "mutexlock.h"
-#include "noncopyable.h"
+#include "libbase/mutexlock.h"
+#include "libbase/noncopyable.h"
 
 #include <pthread.h>
 

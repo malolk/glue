@@ -1,12 +1,12 @@
 #ifndef GLUE_LIBBASE_THREADPOOL_H_
 #define GLUE_LIBBASE_THREADPOOL_H_
 
-#include "logger.h"
-#include "mutexlock.h"
-#include "condvar.h"
-#include "thread.h"
-#include "noncopyable.h"
-#include "bounded_blocking_queue.h"
+#include "libbase/logger.h"
+#include "libbase/mutexlock.h"
+#include "libbase/condvar.h"
+#include "libbase/thread.h"
+#include "libbase/noncopyable.h"
+#include "libbase/bounded_blocking_queue.h"
 
 #include <functional>
 #include <deque>
@@ -24,7 +24,7 @@ class ThreadPool: private Noncopyable {
   };
   
   typedef std::function<void()> TaskType;
-  explicit ThreadPool(size_t size) 
+  explicit ThreadPool(int size) 
     : size_(size), threads_(size), state_(kSTARTUP), quit_(false), queue_(size) {
     LOG_CHECK(size > 0, "At least one thread in ThreadPool");
   } 
@@ -41,7 +41,7 @@ class ThreadPool: private Noncopyable {
 
  private:
   void ThreadRoutine();
-  size_t size_;
+  int size_;
   std::vector<Thread*> threads_;
   RunningState state_;
   std::atomic<bool> quit_;

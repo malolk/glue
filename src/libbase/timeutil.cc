@@ -1,4 +1,4 @@
-#include "timeutil.h"
+#include "libbase/timeutil.h"
 
 #include <string>
 
@@ -8,12 +8,12 @@
 #include <errno.h>
 
 namespace glue_libbase {
-int TimeUtil::ToStringOfMicros(char* buf, int16_t len, int8_t flag) {
+int TimeUtil::ToStringOfMicros(char* buf, int len, int flag) {
   struct timeval tv;
   gettimeofday(&tv, NULL);
   time_t sec = tv.tv_sec;
   struct tm* time_store = localtime(&sec);
-  int size = strftime(buf, len, "%Y-%m-%d %H:%M:%S", time_store);
+  int size = static_cast<int>(strftime(buf, len, "%Y-%m-%d %H:%M:%S", time_store));
   if (size == 0) return -1; /* not enough space to store the content */
   if (flag) { /* add microseconds */
     len -= size;

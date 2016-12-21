@@ -1,19 +1,11 @@
 #ifndef GLUE_LIBBASE_THREAD_H_
 #define GLUE_LIBBASE_THREAD_H_
 
-/*
-#include <libbase/noncopyable.h>
-#include <libbase/condvar.h>
-#include <libbase/mutexlock.h>
-#include <libbase/blocking_queue.h>
-#include <libbase/debug.h>
-*/
-
-#include "logger.h"
-#include "noncopyable.h"
-#include "condvar.h"
-#include "mutexlock.h"
-#include "blocking_queue.h"
+#include "libbase/logger.h"
+#include "libbase/noncopyable.h"
+#include "libbase/condvar.h"
+#include "libbase/mutexlock.h"
+#include "libbase/blocking_queue.h"
 
 #include <unistd.h>
 #include <pthread.h>
@@ -45,9 +37,9 @@ class Thread: private Noncopyable {
   int Stop();
 
   bool IsJoined() { return joined_; }
-  int TaskNum() { return bqueue_.size(); }
+  size_t TaskNum() { return bqueue_.size(); }
   pid_t GetThreadId() { return process_id_; }
-  std::string name() { return name_; }
+  std::string Name() { return name_; }
 
   ~Thread() {
     LOG_CHECK(joined_, "Thread instance should be joined before exit");

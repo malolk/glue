@@ -1,10 +1,10 @@
 #ifndef GLUE_LIBBASE_BOUNDEDBLOCKINGQUEUE_H_
 #define GLUE_LIBBASE_BOUNDEDBLOCKINGQUEUE_H_
 
-#include "noncopyable.h"
-#include "mutexlock.h"
-#include "condvar.h"
-#include "logger.h"
+#include "libbase/noncopyable.h"
+#include "libbase/mutexlock.h"
+#include "libbase/condvar.h"
+#include "libbase/logger.h"
 
 #include <deque>
 

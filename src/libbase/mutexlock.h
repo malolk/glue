@@ -1,13 +1,8 @@
 #ifndef GLUE_LIBBASE_MUTEXLOCK_H_
 #define GLUE_LIBBASE_MUTEXLOCK_H_
 
-/*
-#include <libbase/noncopyable.h>
-#include <libbase/debug.h>
-*/
-
-#include "noncopyable.h"
-#include "logger.h"
+#include "libbase/noncopyable.h"
+#include "libbase/logger.h"
 
 #include <iostream>
 

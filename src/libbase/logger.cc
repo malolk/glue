@@ -1,6 +1,6 @@
-#include "logger.h"
-#include "timeutil.h"
-#include "thread.h"
+#include "libbase/logger.h"
+#include "libbase/timeutil.h"
+#include "libbase/thread.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -30,6 +30,7 @@ Logger::Logger() {
   assert(ret);
   assert(file_);
   assert(level_ >= kTRACE && level_ <= kFATAL); 
+  (void)ret;
 }
 
 Logger::~Logger() {

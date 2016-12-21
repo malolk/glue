@@ -15,7 +15,7 @@ typedef std::weak_ptr<glue_libbase::Element<int>> IntIdType;
 
 void Print(const std::vector<int> vec) {
   std::string ret;
-  for (int i = 0; i < vec.size(); ++i) {
+  for (size_t i = 0; i < vec.size(); ++i) {
     ret += std::to_string(vec[i]) + std::string(" ");   
   }
   LOG_INFO("Vec contents: %s", ret.c_str());
