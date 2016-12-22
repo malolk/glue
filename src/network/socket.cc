@@ -108,6 +108,7 @@ static const int BACKUP_BUF_SIZE = 65535;
 ssize_t Socket::Receive(int sockfd, ByteBuffer& buf) {
   char backup[BACKUP_BUF_SIZE];     
   const size_t buf_size = buf.WritableBytes();
+  const size_t buf_readable = buf.ReadableBytes();
   struct iovec buf_array[2];
   buf_array[0].iov_base = buf.AddrOfWrite();     
   buf_array[0].iov_len = buf_size;
@@ -146,6 +147,7 @@ ssize_t Socket::Receive(int sockfd, ByteBuffer& buf) {
   } else {
 	buf.MoveWritePos(static_cast<size_t>(recv_num));
   }
+  LOG_CHECK(buf.ReadableBytes() - buf_readable == static_cast<size_t>(recv_num), "");
   return recv_num;
 }
 
@@ -163,9 +165,13 @@ ssize_t Socket::Send(int sockfd, ByteBuffer& buf) {
 	}
   }	else {
 	if (sent_num > 0) {
+      if (static_cast<size_t>(sent_num) > send_size) {
+        LOG_WARN("sent bytes=%d, readable bytes=%d", sent_num, send_size);
+      }
 	  buf.MoveReadPos(static_cast<size_t>(sent_num));
     }
   }
+  LOG_CHECK(send_size - buf.ReadableBytes() == static_cast<size_t>(sent_num), "");
   return sent_num;
 }
 
