@@ -124,7 +124,7 @@ ssize_t Socket::Receive(int sockfd, ByteBuffer& buf) {
     } else {
       int err = errno;
       if (err == EAGAIN || EWOULDBLOCK) {
-        LOG_WARN("No data in this socket, sockfd = %d", sockfd);
+        LOG_INFO("No data in this socket, sockfd = %d", sockfd);
         return kNODATA;
       } else if (err == EINTR) {
         LOG_WARN("Reception is interrupted, sockfd = %d", sockfd);
@@ -147,7 +147,11 @@ ssize_t Socket::Receive(int sockfd, ByteBuffer& buf) {
   } else {
 	buf.MoveWritePos(static_cast<size_t>(recv_num));
   }
-  LOG_CHECK(buf.ReadableBytes() - buf_readable == static_cast<size_t>(recv_num), "");
+
+  if ((buf.ReadableBytes() - buf_readable) != static_cast<size_t>(recv_num)) {
+    LOG_ERROR("Error on send on fd=%d", sockfd);
+    return kERROR;
+  }
   return recv_num;
 }
 
@@ -157,7 +161,7 @@ ssize_t Socket::Send(int sockfd, ByteBuffer& buf) {
   if (sent_num < 0)	{
 	int err = errno;
 	if (err == EAGAIN || err == EWOULDBLOCK) {
-	  LOG_WARN("No space to write, sockfd=%d ", sockfd);
+	  LOG_INFO("No space to write, sockfd=%d ", sockfd);
 	  return 0;
 	} else if (err == EPIPE) {
 	  LOG_ERROR("Error on write to sockfd=%d ", sockfd);
@@ -171,7 +175,10 @@ ssize_t Socket::Send(int sockfd, ByteBuffer& buf) {
 	  buf.MoveReadPos(static_cast<size_t>(sent_num));
     }
   }
-  LOG_CHECK(send_size - buf.ReadableBytes() == static_cast<size_t>(sent_num), "");
+  if ((send_size - buf.ReadableBytes()) != static_cast<size_t>(sent_num)) {
+    LOG_ERROR("Error on send on fd=%d", sockfd);
+    return kERROR;
+  }
   return sent_num;
 }
 
