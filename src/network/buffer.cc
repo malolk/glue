@@ -11,8 +11,7 @@ const size_t ByteBuffer::default_capacity_  = 1024;
 
 /* Find last substr that equal to given str, the return pos shoud sit before end */
 const char* ByteBuffer::FindLast(const std::string& str, const char* end) const {
-  LOG_CHECK(str.size() > 0 && end > AddrOfRead() && end <= AddrOfWrite(), 
-            "Invalid arguments");
+  LOG_CHECK(str.size() > 0 && end > AddrOfRead() && end <= AddrOfWrite(), "Invalid arguments");
   /* TODO: No temporary string please. */
   std::string::size_type pos = ToString().rfind(str, end - AddrOfRead());
   if (pos != std::string::npos) {
@@ -41,8 +40,7 @@ int ByteBuffer::ReadFd(int fd) {
     } else if (num > 0) {
       MoveWritePos(num);
 	  if (WritableBytes() == 0) {
-		buf_.resize(capacity_ * 2);
-        capacity_ *= 2;
+		buf_.resize(buf_.size() * 2);
 	  }
 	} else {
       LOG_ERROR("Read from fd %d failed", fd);
@@ -70,7 +68,7 @@ std::vector<char> ByteBuffer::Read(size_t n) {
   const size_t remaining = ReadableBytes();
   size_t read_num = (n <= remaining ? n : remaining);
   LOG_CHECK((read_num <= remaining), "No enough byte to be read");
-  std::vector<char> ret(buf_.begin() + read_pos_, buf_.begin() + read_num);
+  std::vector<char> ret(buf_.begin() + read_pos_, buf_.begin() + read_pos_ + read_num);
   MoveReadPos(read_num);
   return ret;
 }
@@ -81,26 +79,24 @@ void ByteBuffer::Append(const char* start, size_t size) {
   }
   LOG_CHECK((buf_.size() - write_pos_) >= size, "");
   std::copy(start, start + size, AddrOfWrite());
-  write_pos_ += size;
+  MoveWritePos(size);
 }
 
 void ByteBuffer::SpareSpace(size_t size) {
-  if (size <= (capacity_ - write_pos_ + read_pos_)) {
+  if (size <= (buf_.size() - write_pos_ + read_pos_)) {
     std::copy(buf_.begin() + read_pos_, 
               buf_.begin() + write_pos_, buf_.begin());
     write_pos_ = write_pos_ - read_pos_;
     read_pos_ = 0;
   } else {
     buf_.resize(write_pos_ + size);
-    capacity_ = write_pos_ + size;
+    LOG_CHECK(buf_.size() == (write_pos_ + size), "");
   }
-  LOG_CHECK(buf_.size() == capacity_, "");
 }
 
 void ByteBuffer::MoveReadPos(size_t size) {
   if (size > ReadableBytes()) {
-    LOG_WARN("buffer readable bytes=%d move bytes=%d", ReadableBytes(), size);
-	size = ReadableBytes();
+    LOG_FATAL("buffer readable bytes=%d move bytes=%d", ReadableBytes(), size);
   }
   read_pos_ += size;
   if (read_pos_ == write_pos_) {
