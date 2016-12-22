@@ -37,12 +37,12 @@ void Connection::SetCloseOperation(const CallbackCloseType& cb) {
 }
 
 void Connection::Send(ByteBuffer& data) {
-  /* I/O operation in loop thread is thread-safe. std::ref avoids copy when binding */
+  /* I/O operation in loop thread is thread-safe. */
   epoll_ptr_->RunNowOrLater(std::bind(&Connection::SendInLoopThread,
-                          this, std::ref(data)));
+                          this, data));
 }
 
-void Connection::SendInLoopThread(ByteBuffer& data) {
+void Connection::SendInLoopThread(ByteBuffer data) {
   ssize_t sent_num = 0;
   const size_t send_size = data.ReadableBytes();
   if (send_buf_.ReadableBytes() == 0) {
@@ -65,7 +65,7 @@ void Connection::SendInLoopThread(ByteBuffer& data) {
   /* Write is not finished. Enable the write-notification if necessary. */
   if (send_size > static_cast<size_t>(sent_num)) {
     send_buf_.Append(data.AddrOfRead(), send_size - sent_num);
-	data.MoveReadPos(send_size - sent_num);
+    data.MoveReadPos(send_size - sent_num);
 	if (!channel_.IsWriteEnabled()) {
 	  channel_.EnableWR();
     }
@@ -82,7 +82,6 @@ void Connection::WriteCallback() {
     }
 	return;
   }
-  send_buf_.MoveReadPos(sent_num);
   if (send_buf_.ReadableBytes() == 0) {	
     /* Write is finished. Close it now if connection is closing. */
 	if (state_ == kCLOSING) {

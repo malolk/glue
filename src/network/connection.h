@@ -56,7 +56,7 @@ class Connection: private glue_libbase::Noncopyable,
     return sockfd_;
   }
  private:
-  void SendInLoopThread(ByteBuffer& data);
+  void SendInLoopThread(ByteBuffer data);
   void StopWrite();
   void StopRead();
   int sockfd_;
