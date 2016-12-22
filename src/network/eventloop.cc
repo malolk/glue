@@ -36,7 +36,7 @@ void EventLoop::NewConnection(int fd, const Connection::CallbackReadType& read_c
 }
 
 void EventLoop::NewConnectionOfClient(int fd, const Connection::CallbackReadType& read_cb,
-                                              const Connection::CallbackInitType& init_cb) {
+                                      const Connection::CallbackInitType& init_cb) {
   LOG_CHECK(fd >= 0, "");
   std::shared_ptr<Connection> conn_ptr(new Connection(fd, epoll_ptr_));
   conn_pool_[conn_ptr.get()] = conn_ptr;
