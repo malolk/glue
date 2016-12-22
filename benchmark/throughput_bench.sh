@@ -1,8 +1,8 @@
 #!/bin/bash
 
-running_time=60
+running_time=30
 thread_num=2
-for client_num in 10 20 30 40 50 100 1000 5000 10000 15000 20000
+for client_num in 100 1000 2000 5000 10000
 do
 	for chunk_size in 16 48
 	do
