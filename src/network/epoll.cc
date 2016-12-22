@@ -155,10 +155,10 @@ void Epoll::HandleEventsImpl(EventChannel* chann_ptr, uint32_t ret_fields) {
   } else if (ret_fields & EPOLLOUT) {
 	chann_ptr->HandleWrite();
   } else if (ret_fields & EPOLLERR) {
-	LOG_WARN("epoll internal error");
+	LOG_ERROR("epoll internal error");
 	chann_ptr->HandleClose();
   } else if (!(ret_fields & EPOLLIN) && (ret_fields & EPOLLHUP)) {
-	LOG_WARN("Hub on fd: %d", chann_ptr->Fd());
+	LOG_INFO("Hub on fd: %d", chann_ptr->Fd());
 	chann_ptr->HandleClose();
   }
 }
