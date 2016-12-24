@@ -82,7 +82,7 @@ void ByteBuffer::Append(const char* start, size_t size) {
   MoveWritePos(size);
 }
 
-void ByteBuffer::SpareSpace(size_t size) {
+int ByteBuffer::SpareSpace(size_t size) {
   if (size <= (buf_.size() - write_pos_ + read_pos_)) {
     std::copy(buf_.begin() + read_pos_, 
               buf_.begin() + write_pos_, buf_.begin());
@@ -90,8 +90,12 @@ void ByteBuffer::SpareSpace(size_t size) {
     read_pos_ = 0;
   } else {
     buf_.resize(write_pos_ + size);
-    LOG_CHECK(buf_.size() == (write_pos_ + size), "");
+    if (buf_.size() != (write_pos_ + size)) {
+      LOG_ERROR("SpareSpace failed with requested size=%d", size);
+      return 0;
+    }
   }
+  return 1;
 }
 
 void ByteBuffer::MoveReadPos(size_t size) {

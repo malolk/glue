@@ -92,8 +92,9 @@ class ByteBuffer {
   const char* FindLast(const std::string&, const char*) const;
   const char* Find(const std::string&, const char*) const;
   std::vector<char> Read(size_t );
-private:
-  void SpareSpace(size_t size);
+  int SpareSpace(size_t size);
+
+ private:
   size_t ReadPos() const { return read_pos_; }
   size_t WritePos() const { return write_pos_; }
 
