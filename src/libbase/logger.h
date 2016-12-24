@@ -1,10 +1,18 @@
 #ifndef GLUE_LIBBASE_LOGGER_H_
 #define GLUE_LIBBASE_LOGGER_H_
 
+#include "network/buffer.h"
+#include "libbase/thread.h"
+#include "libbase/mutex.h"
+#include "libbase/condvar.h"
+
 #include <stdio.h>
 #include <stddef.h>
 
 #include <string>
+#include <vector>
+#include <memory>
+#include <atomic>
 
 /* Nasty macro definitions for LOG_* */
 #define LOG_TRACE()       do { glue_libbase::Logger::GetLogger().LogTrace(__FILE__, __LINE__, __func__   \
@@ -64,8 +72,32 @@ class Logger {
     }
   };
 
+  void WriteBuffer(const char* data, int size);
+  void BackgroundDump();
+  void StartBackgroundThread() {
+    thread_.Start();
+    thread_.Schedule(std::bind(&Logger::BackgroundDump, this));
+  }
+  void StopBackgroundThread() {
+    /* wakeup the thread. */
+    condvar_.NotifyOne();
+    running_ = false;
+    thread_.Join();
+  }
+
+  typedef glue_network::ByteBuffer BufferType;
   LevelType level_;
   FILE* file_;
+  MutexLock mu_;
+  CondVar condvar_;
+  Thread thread_;
+  std::unique_ptr<glue_network::Buffer> current_buf_;
+  std::vector<std::unique_ptr<BufferType>> spared_bufs_;
+  std::vector<std::unique_ptr<BufferType>> full_bufs_;
+  std::atomic<bool> running_;
+  const int buf_size_;
+  /* limit the num of bufs that the logger would take up at one time. */
+  const int max_buf_num_; 
   static Logger* logger_;
   static Helper helper_;
 };

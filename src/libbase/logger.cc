@@ -15,22 +15,32 @@
 
 namespace glue_libbase {
 
-static const char config_path[] = "logger.conf";
+namespace {
+const char config_path[] = "logger.conf";
 /* Log formate like this: <[LEVEL]> <TIME> <FILE> <LINE> <FUNC> <TREADNUM> <MSG> */
-static const char* default_format = "[%-5s] %s %s:%-4d %s() @Thread[%5d] %s\n";
-static const char* level_str[] = {"", "TRACE", "INFO", "WARN", "ERROR", "FATAL"};
-
-static const char* default_log_path = "out.log";
-static const Logger::LevelType default_level = Logger::kWARN;
+const char* default_format = "[%-5s] %s %s:%-4d %s() @Thread[%5d] %s\n";
+const char* level_str[] = {"", "TRACE", "INFO", "WARN", "ERROR", "FATAL"};
 Logger* Logger::logger_ = new Logger();
 Logger::Helper Logger::helper_;
+}
 
-Logger::Logger() {
+
+/* TODO: Read the buf settings from the configure file. */
+#define LOGGER_FLUSH_PERIOD  (3)
+#define LOGGER_MIN_BUF_NUM   (3)
+#define LOGGER_MAX_BUF_NUM   (10)
+#define LOGGER_BUF_SIZE      (4 * 1024 * 1024)
+
+Logger::Logger() 
+  : level_(kWARN), file_(NULL), mu_(), 
+    condvar_(mu_), thread_("logger"), 
+    running_(false), buf_size_(LOGGER_BUF_SIZE), max_buf_num_(LOGGER_MAX_BUF_NUM) {
   int ret = Config(config_path);
   assert(ret);
-  assert(file_);
-  assert(level_ >= kTRACE && level_ <= kFATAL); 
   (void)ret;
+  assert(file_);
+  assert(level_ >= kTRACE && level_ <= kFATAL);
+  StartBackgroundThread();
 }
 
 Logger::~Logger() {
@@ -38,10 +48,82 @@ Logger::~Logger() {
     fclose(file_);  
     file_ = NULL;
   }
+  StopBackgroundThread();
+}
+
+/* Background thread function doing file dump. */
+Logger::BackGroundDump() {
+  spared_bufs_.resize(LOGGER_MIN_BUF_NUM, new BufferType);
+  for (int i = 0; i < LOGGER_MIN_BUF_NUM; ++i) {
+    spared_bufs_.SpareSpace(LOGGER_BUF_SIZE);
+  }
+  std::vector<std::unique_ptr<glue_network::Buffer>> ready_bufs;
+  running_ = true;
+  while (running_) {
+    {
+      MutexLockGuard m(mu_);
+      /* Flush in at most LOGGER_FLUSH_PERIOD seconds. */
+      if (full_bufs_.empty()) {
+        condvar_.WaitInSeconds(LOGGER_FLUSH_PERIOD);  
+      }
+      if (!full_bufs_.empty()) {
+        ready_bufs.swap(full_bufs_);
+      }
+      if (current_buf_) {
+        ready_bufs.push_back(std::move(current_buf_)); 
+      }
+    }
+    
+    int ready_num = ready_bufs.size();
+    for (int i = 0; i < ready_num; ++i) {
+      ::fwrite(ready_bufs[i]->AddrOfRead(), 1, ready_bufs[i]->ReadableBytes(), file_);
+      ready_bufs[i]->Reset();
+    }
+    {
+      MutexLockGuard m(mu_);
+      int sum_num = spared_bufs_.size() + ready;
+      spared_bufs_.reserve(sum_num);
+      for (int i = 0; i < ready_num; ++i) {
+        spared_bufs_.push_back(std::move(ready_bufs[i]));
+      }
+    }
+    ready_bufs.clear();
+    ::fflush(file_);
+  }
+  /* When exits, there might be any unflushed bufs. 
+   * Be sure that the other threads have been joined. */
+  for (int i = 0; i < full_bufs_.size(); ++i) {
+    ::fwrite(full_bufs_[i]->AddrOfRead(), 1, full_bufs_[i]->ReadableBytes(), file_);
+  }
+  if (current_buf_) {
+    ::fwrite(current_buf_->AddrOfRead(), 1, current_buf_->ReadableBytes(), file_);
+  }
+  ::fflush(file_);
+}
+
+void Logger::WriteBuffer(const char* data, int size) {
+  MutexLockGuard m(mu_);
+  if (current_buf_->WritableBytes() >= size) {
+    current_buf_->Append(data, size);
+  } else {
+    /* No enough space in the current buffer */ 
+    full_bufs_.push_back(std::move(current_buf_));
+    if (!spared_bufs_.empty()) { 
+      current_buf_.swap(spared_bufs.back());
+      spared_bufs_.pop_back();
+    } else {
+      /* spared bufs is empty, allocate one. */
+      std::unique_ptr<BufferType> new_buf(new BufferType);
+      new_buf->SpareSpace(LOGGER_BUF_SIZE);
+      current_buf_.reset(new_buf);
+    }
+    current_buf_->Append(data, size);
+    condvar_.NotifyOne();
+  }
 }
 
 /*
- * Now, only the log file path and level need to set value in config file.
+ * Now, only the log file path and level need to be set in config file.
  * More options would be added here.
  */
 int Logger::SetValue(const std::string& key, const std::string& value) {
@@ -72,8 +154,6 @@ int Logger::SetValue(const std::string& key, const std::string& value) {
 int Logger::Config(const char* path) {
   std::ifstream ifs(path, std::ios::in); 
   int ret = 1;
-  level_ = default_level;
-  file_ = NULL;
   if (ifs.good()) {
     std::string key, value;
     while(!ifs.eof()) {
@@ -90,7 +170,7 @@ int Logger::Config(const char* path) {
   if (ifs.is_open())  ifs.close();
   if (ret) {
     /* Using default log_file */
-    if (!file_) SetValue("logfile", default_log_path);
+    if (!file_) SetValue("logfile", "out.log");
   }
   return ret;
 }
@@ -155,8 +235,7 @@ void Logger::Log(int level, const char* file, int line, const char* func,
   size = LogPrintfWrapper(&p, len, default_format, 
                     level_str[level/10], TimeUtil::NowTime().c_str(), 
                     file, line, func, thread_id, msg_ptr);
-  fwrite(p, 1, size, file_);
-  fflush(file_);
+  WriteBuffer(p, size);
   if (msg_ptr != msg_buf) {
     delete msg_ptr;
   }
