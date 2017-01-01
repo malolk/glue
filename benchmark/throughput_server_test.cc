@@ -1,7 +1,7 @@
 #include "network/tcp_server.h"
 #include "network/socket_address.h"
 #include "network/connection.h"
-#include "network/buffer.h"
+#include "libbase/buffer.h"
 
 #include <iostream>
 #include <memory>
@@ -11,6 +11,7 @@
 #include <stdlib.h>
 
 using namespace glue_network;
+using namespace glue_libbase;
 
 void pingpong(std::shared_ptr<Connection> conn, ByteBuffer& buf) {
   conn->Send(buf);
