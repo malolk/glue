@@ -1,9 +1,9 @@
 #ifndef GLUE_LIBBASE_LOGGER_H_
 #define GLUE_LIBBASE_LOGGER_H_
 
-#include "network/buffer.h"
+#include "libbase/buffer.h"
 #include "libbase/thread.h"
-#include "libbase/mutex.h"
+#include "libbase/mutexlock.h"
 #include "libbase/condvar.h"
 
 #include <stdio.h>
@@ -13,20 +13,6 @@
 #include <vector>
 #include <memory>
 #include <atomic>
-
-/* Nasty macro definitions for LOG_* */
-#define LOG_TRACE()       do { glue_libbase::Logger::GetLogger().LogTrace(__FILE__, __LINE__, __func__   \
-                              ); } while(0)
-#define LOG_INFO(M, ...)  do { glue_libbase::Logger::GetLogger().LogInfo(__FILE__, __LINE__, __func__,   \
-                              M, ##__VA_ARGS__); } while(0)
-#define LOG_WARN(M, ...)  do { glue_libbase::Logger::GetLogger().LogWarn(__FILE__, __LINE__, __func__,   \
-                              M, ##__VA_ARGS__); } while(0)
-#define LOG_ERROR(M, ...) do { glue_libbase::Logger::GetLogger().LogError(__FILE__, __LINE__, __func__,  \
-                              M, ##__VA_ARGS__); } while(0)
-#define LOG_FATAL(M, ...) do { glue_libbase::Logger::GetLogger().LogFatal(__FILE__, __LINE__, __func__,  \
-                              M, ##__VA_ARGS__); } while(0)
-#define LOG_CHECK(B, M)   do { glue_libbase::Logger::GetLogger().LogCheck(__FILE__, __LINE__, __func__,  \
-                              (B), "("#B")" M);} while(0)
 
 /* A thread-safe implementation of logger in Singleton pattern. */
 namespace glue_libbase {
@@ -54,14 +40,15 @@ class Logger {
   Logger();
   ~Logger();
 
-  /* No copy allowed. */
+  // No copy allowed.
   Logger(const Logger&);
   const Logger& operator=(const Logger&);
 
   void Log(int level, const char* file, int line, const char* func, const char* msg_format, va_list ap, const char*);
   int SetValue(const std::string& key, const std::string& value);
   int Config(const char* path_of_config);
-  /* Free logger_ after exitting main routine */
+  void Initialize();
+  // Free logger_ after exitting main routine
   class Helper {
    public:
     ~Helper() {
@@ -79,24 +66,27 @@ class Logger {
     thread_.Schedule(std::bind(&Logger::BackgroundDump, this));
   }
   void StopBackgroundThread() {
-    /* wakeup the thread. */
+    // wakeup the thread. 
     condvar_.NotifyOne();
     running_ = false;
     thread_.Join();
   }
 
-  typedef glue_network::ByteBuffer BufferType;
   LevelType level_;
   FILE* file_;
   MutexLock mu_;
   CondVar condvar_;
   Thread thread_;
-  std::unique_ptr<glue_network::Buffer> current_buf_;
-  std::vector<std::unique_ptr<BufferType>> spared_bufs_;
-  std::vector<std::unique_ptr<BufferType>> full_bufs_;
+  std::unique_ptr<ByteBuffer> current_buf_;
+  std::vector<std::unique_ptr<ByteBuffer>> spared_bufs_;
+  std::vector<std::unique_ptr<ByteBuffer>> full_bufs_;
   std::atomic<bool> running_;
+  std::atomic<bool> started_;
+  // switch to different logging file when the current_day_ changed.
+  std::string base_name_;
+  int current_day_;
   const int buf_size_;
-  /* limit the num of bufs that the logger would take up at one time. */
+  // limit the num of bufs that the logger would take up at one time.
   const int max_buf_num_; 
   static Logger* logger_;
   static Helper helper_;
