@@ -23,6 +23,7 @@ The project Glue is built for three reasons:
 * Used the 4-ary heap to store timers, while the delete operation or update operation of 4-ary heap could be used on any middle element efficiently, not just the top-element.
 * Move any comming connection to the corresponding eventloop, so the connection-deletion could be safely and effciently.
 * Support varidic-parameter logging abilities with flexible configurations.
+* Support asynchronous logging.
 * No need to depend on other libraries(e.g. boost), just using the C++0x with approriate g++ compiler.
 
 ## Benchmark
