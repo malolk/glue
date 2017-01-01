@@ -16,6 +16,7 @@ class TimeUtil {
   static struct timeval NowTimeval();
   static int64_t NowMicros();
   static int64_t NowSeconds();
+  static int NowDay();
   static void StartTime(int64_t& start_micros);
   static int64_t ElapsedMicros(const int64_t& start_micros);
   static int64_t ElapsedSeconds(const int64_t& start_micros);

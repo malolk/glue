@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include <stdlib.h>
 #include <sys/time.h>
 #include <time.h>
 #include <string.h>
@@ -24,7 +25,6 @@ int TimeUtil::ToStringOfMicros(char* buf, int len, int flag) {
     } if (size > len) {
       return 0; /* no enough space */
     } else {
-//      LOG_ERROR(errno);
       return -1;  
     }
   } else {
@@ -64,6 +64,15 @@ int64_t TimeUtil::NowSeconds() {
   struct timeval tv;
   gettimeofday(&tv, NULL);
   return tv.tv_sec;
+}
+
+// return the day num in the whole year.
+int TimeUtil::NowDay() {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  time_t sec = tv.tv_sec;
+  struct tm* time_store = localtime(&sec);
+  return time_store->tm_yday;
 }
 
 void TimeUtil::StartTime(int64_t& start_micros) {
