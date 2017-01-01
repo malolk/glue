@@ -1,4 +1,4 @@
-#include "network/buffer.h"
+#include "libbase/buffer.h"
 
 #include <unistd.h>
 #include <errno.h>
@@ -6,12 +6,12 @@
 
 #include <algorithm>
 
-namespace glue_network {
+namespace glue_libbase {
 const size_t ByteBuffer::default_capacity_  = 1024;
 
 /* Find last substr that equal to given str, the return pos shoud sit before end */
 const char* ByteBuffer::FindLast(const std::string& str, const char* end) const {
-  LOG_CHECK(str.size() > 0 && end > AddrOfRead() && end <= AddrOfWrite(), "Invalid arguments");
+  assert(str.size() > 0 && end > AddrOfRead() && end <= AddrOfWrite());
   /* TODO: No temporary string please. */
   std::string::size_type pos = ToString().rfind(str, end - AddrOfRead());
   if (pos != std::string::npos) {
@@ -22,8 +22,7 @@ const char* ByteBuffer::FindLast(const std::string& str, const char* end) const 
 
 /* Find first substr that equal to given str, the return pos shoud sit after start */
 const char* ByteBuffer::Find(const std::string& str, const char* start) const {
-  LOG_CHECK(str.size() > 0 && start >= AddrOfRead() && start < AddrOfWrite(), 
-            "Invalide arguments");
+  assert(str.size() > 0 && start >= AddrOfRead() && start < AddrOfWrite());
   std::string::size_type pos = ToString().find(str, start - AddrOfRead());
   if (pos != std::string::npos) {
     return AddrOfRead() + pos;
@@ -32,7 +31,7 @@ const char* ByteBuffer::Find(const std::string& str, const char* start) const {
 }
 
 int ByteBuffer::ReadFd(int fd) {
-  LOG_CHECK(fd >= 0, "fd should be non-negative");
+  assert(fd >= 0);
   while (1) {
     ssize_t num = ::read(fd, AddrOfWrite(), WritableBytes());
 	if (num == 0) {
@@ -43,19 +42,19 @@ int ByteBuffer::ReadFd(int fd) {
 		buf_.resize(buf_.size() * 2);
 	  }
 	} else {
-      LOG_ERROR("Read from fd %d failed", fd);
+      fprintf(stderr, "Read from fd %d failed", fd);
 	  return -1;
 	}
   }
 }
 
 int ByteBuffer::WriteFd(int fd) {
-  LOG_CHECK(fd >= 0, "fd should be non-negative");
+  assert(fd >= 0);
   const size_t write_cnt = ReadableBytes();
   while (ReadableBytes() > 0) {
     ssize_t num = ::write(fd, AddrOfRead(), ReadableBytes());
 	if (num < 0) {
-	  LOG_ERROR("Write to fd %d failed", fd);
+      fprintf(stderr, "Write to fd %d failed", fd);
 	  return -1;
 	}
 	MoveReadPos(static_cast<size_t>(num));
@@ -67,7 +66,6 @@ int ByteBuffer::WriteFd(int fd) {
 std::vector<char> ByteBuffer::Read(size_t n) {
   const size_t remaining = ReadableBytes();
   size_t read_num = (n <= remaining ? n : remaining);
-  LOG_CHECK((read_num <= remaining), "No enough byte to be read");
   std::vector<char> ret(buf_.begin() + read_pos_, buf_.begin() + read_pos_ + read_num);
   MoveReadPos(read_num);
   return ret;
@@ -77,7 +75,7 @@ void ByteBuffer::Append(const char* start, size_t size) {
   if (size > WritableBytes()) {
     SpareSpace(size);
   }
-  LOG_CHECK((buf_.size() - write_pos_) >= size, "");
+  assert((buf_.size() - write_pos_) >= size);
   std::copy(start, start + size, AddrOfWrite());
   MoveWritePos(size);
 }
@@ -91,7 +89,7 @@ int ByteBuffer::SpareSpace(size_t size) {
   } else {
     buf_.resize(write_pos_ + size);
     if (buf_.size() != (write_pos_ + size)) {
-      LOG_ERROR("SpareSpace failed with requested size=%d", size);
+      fprintf(stderr, "SpareSpace failed with requested size=%d", static_cast<int>(size));
       return 0;
     }
   }
@@ -99,13 +97,11 @@ int ByteBuffer::SpareSpace(size_t size) {
 }
 
 void ByteBuffer::MoveReadPos(size_t size) {
-  if (size > ReadableBytes()) {
-    LOG_FATAL("buffer readable bytes=%d move bytes=%d", ReadableBytes(), size);
-  }
+  assert(size <= ReadableBytes());
   read_pos_ += size;
   if (read_pos_ == write_pos_) {
     read_pos_ = write_pos_ = 0;
   }
 }
 
-} // namespace glue_netowrk
+} // namespace glue_libbase

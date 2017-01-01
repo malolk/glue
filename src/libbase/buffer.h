@@ -2,18 +2,21 @@
 #define GLUE_NETWORK_BYTEBUFFER_H_
 
 #include "libbase/thread.h"
-#include "libbase/logger.h"
 
 #include <vector>
 #include <string>
 
-namespace glue_network {
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+namespace glue_libbase {
 /* Copable, default copy constructor, assignment operator and destructor is ok */
 class ByteBuffer {
  public:
   explicit ByteBuffer(size_t capacity = default_capacity_)
     : buf_id_(glue_libbase::ThreadId()), read_pos_(0), write_pos_(0) {
-    LOG_CHECK(capacity > 0, "Buffer size should be greater than zero");
+    assert(capacity > 0);
     buf_.resize(capacity, 0);
   }
   ~ByteBuffer() {
@@ -40,16 +43,12 @@ class ByteBuffer {
   }
 	
   size_t ReadableBytes() const {
-    if (write_pos_ < read_pos_) {
-      LOG_FATAL("write_pos_=%d is below the read_pos_=%d, cap=%d", write_pos_, read_pos_, buf_.size());
-    }
+    assert(write_pos_ >= read_pos_);
     return (write_pos_ - read_pos_);
   }
 
   size_t WritableBytes() const {
-    if (write_pos_ > buf_.size()) {
-      LOG_FATAL("write_pos_=%d is ahead the capacity_=%d", write_pos_, buf_.size());
-    }
+    assert(write_pos_ <= buf_.size());
     return (buf_.size() - write_pos_);
   }
 
@@ -79,9 +78,7 @@ class ByteBuffer {
   }
 
   void MoveWritePos(size_t size) {
-    if (size > WritableBytes()) {
-      LOG_FATAL("write is over the end. read_pos=%d, write_pos=%d, cap=%d", read_pos_, write_pos_, buf_.size());
-    }
+    assert(size <= WritableBytes());
     write_pos_ += size;
   }
 
@@ -104,5 +101,5 @@ class ByteBuffer {
   size_t write_pos_;
   static const size_t default_capacity_;
 };
-} // namespace glue_network
+} // namespace glue_libbase
 #endif // GLUE_NETWORK_BYTEBUFFER_H_
