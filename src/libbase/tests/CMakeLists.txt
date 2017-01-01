@@ -19,3 +19,5 @@ target_link_libraries(threadpool_test glue_libbase)
 add_executable(waitmember_test waitmember_test.cc)
 target_link_libraries(waitmember_test glue_libbase)
 
+add_executable(buffer_test buffer_test.cc)
+target_link_libraries(buffer_test glue_libbase)

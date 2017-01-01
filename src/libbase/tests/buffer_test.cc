@@ -1,4 +1,5 @@
-#include "network/buffer.h"
+#include "libbase/buffer.h"
+#include "libbase/loggerutil.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -20,7 +21,7 @@ int main() {
   int size = 0;
   const std::string const_str = "1234567890";
 
-  glue_network::ByteBuffer buf;
+  glue_libbase::ByteBuffer buf;
   LOG_CHECK(static_cast<int>(buf.ReadableBytes()) == 0, "intiate readable size is non-zero");
   LOG_CHECK(buf.WritableBytes() > 0, "intiate writable size is not BUF_INIT_CAPACITY");
 	
@@ -40,7 +41,7 @@ int main() {
   LOG_CHECK(static_cast<int>(buf.ReadableBytes()) == size, "Buffer AppendString error");
   LOG_INFO("Buf content: %s AppendString() [PASS]", buf.ToString().c_str());
 
-  glue_network::ByteBuffer buf2;
+  glue_libbase::ByteBuffer buf2;
   buf2.Append(str3, size3);
   LOG_INFO("Buf2 content: %s ", buf2.ToString().c_str());
   
@@ -73,6 +74,7 @@ int main() {
   LOG_CHECK(static_cast<int>(buf.ReadableBytes()) == 0, "WriteFd error");
   ::lseek(fd, 0, SEEK_SET); // Need this to seek the file offset to start
   int read_cnt = buf.ReadFd(fd);
+  close(fd);
   LOG_CHECK(write_cnt == read_cnt, "ReadFd error");
   LOG_INFO("Buf content: %s WriteFd() ReadFd() [PASS]", buf.ToString().c_str());
   
