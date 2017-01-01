@@ -2,7 +2,7 @@
 #define GLUE_LIBBASE_HEAP_H_
 
 #include "libbase/noncopyable.h"
-#include "libbase/logger.h"
+#include "libbase/loggerutil.h"
 
 #include <vector>
 #include <functional>

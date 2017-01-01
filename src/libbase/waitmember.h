@@ -1,7 +1,7 @@
 #ifndef GLUE_LIBBASE_WAITMEMBER_H_
 #define GLUE_LIBBASE_WAITMEMBER_H_
 
-#include "libbase/logger.h"
+#include "libbase/loggerutil.h"
 #include "libbase/condvar.h"
 #include "libbase/mutexlock.h"
 #include "libbase/noncopyable.h"

@@ -4,7 +4,7 @@
 #include "libbase/noncopyable.h"
 #include "libbase/mutexlock.h"
 #include "libbase/condvar.h"
-#include "libbase/logger.h"
+#include "libbase/loggerutil.h"
 
 #include <deque>
 
