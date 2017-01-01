@@ -1,7 +1,7 @@
 #ifndef GLUE_LIBBASE_THREADPOOL_H_
 #define GLUE_LIBBASE_THREADPOOL_H_
 
-#include "libbase/logger.h"
+#include "libbase/loggerutil.h"
 #include "libbase/mutexlock.h"
 #include "libbase/condvar.h"
 #include "libbase/thread.h"
