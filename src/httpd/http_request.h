@@ -2,8 +2,8 @@
 #define GLUE_HTTP_REQUEST_H_
 
 #include "network/connection.h"
-#include "network/buffer.h"
-#include "libbase/logger.h"
+#include "libbase/buffer.h"
+#include "libbase/loggerutil.h"
 
 #include <vector>
 #include <string>
@@ -23,7 +23,7 @@ class HttpRequest {
  public:
   typedef std::shared_ptr<glue_network::Connection> ConnectionPtr;
   typedef struct stat PathStat;
-  typedef glue_network::ByteBuffer Buf;
+  typedef glue_libbase::ByteBuffer Buf;
   explicit HttpRequest(const ConnectionPtr& conn): conn_(conn) { 
   }
 

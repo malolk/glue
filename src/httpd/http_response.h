@@ -2,8 +2,8 @@
 #define GLUE_HTTP_RESPONSE_H_
 
 #include "network/connection.h"
-#include "network/buffer.h"
-#include "libbase/logger.h"
+#include "libbase/buffer.h"
+#include "libbase/loggerutil.h"
 
 #include <vector>
 #include <string>
@@ -20,7 +20,7 @@ namespace glue_httpd {
 class HttpResponse {
  public:
   typedef std::shared_ptr<glue_network::Connection> ConnectionPtr;
-  typedef glue_network::ByteBuffer Buf;
+  typedef glue_libbase::ByteBuffer Buf;
   explicit HttpResponse(const ConnectionPtr& conn): conn_(conn) {
   }
   

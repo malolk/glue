@@ -1,4 +1,4 @@
-#include "network/buffer.h"
+#include "libbase/buffer.h"
 #include "httpd/stringutil.h"
 
 #include <vector>
@@ -19,7 +19,7 @@ std::string FormOutput(std::string body) {
 }
 
 int main() {
-  glue_network::ByteBuffer buf;
+  glue_libbase::ByteBuffer buf;
   buf.ReadFd(0);
   std::vector<std::string> query_string = glue_httpd::SliceStrClearly(buf.ToString(), "=");
   buf.Reset();

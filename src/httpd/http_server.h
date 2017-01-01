@@ -3,8 +3,8 @@
 
 #include "network/tcp_server.h"
 #include "network/connection.h"
-#include "network/buffer.h"
 #include "network/socket_address.h"
+#include "libbase/buffer.h"
 #include "libbase/noncopyable.h"
 
 #include <string>
@@ -20,7 +20,7 @@ class HttpServer: private glue_libbase::Noncopyable {
 
   void Start();
 private:
-  static void CallbackOnRequest(ConnectionPtr conn, glue_network::ByteBuffer& buf);
+  static void CallbackOnRequest(ConnectionPtr conn, glue_libbase::ByteBuffer& buf);
   glue_network::TcpServer server_;
 };
 } // namespace glue_httpd

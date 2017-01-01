@@ -116,7 +116,7 @@ void HttpResponse::SendFile(const std::string& path, size_t length) {
   conn_->Send(buf);
 
   int ret = munmap(addr, length);
-  if (ret != -1) {
+  if (ret == -1) {
     LOG_ERROR("munmap error");
   }
 }
