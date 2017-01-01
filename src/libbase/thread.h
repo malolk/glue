@@ -1,7 +1,6 @@
 #ifndef GLUE_LIBBASE_THREAD_H_
 #define GLUE_LIBBASE_THREAD_H_
 
-#include "libbase/logger.h"
 #include "libbase/noncopyable.h"
 #include "libbase/condvar.h"
 #include "libbase/mutexlock.h"
@@ -14,7 +13,6 @@
 #include <linux/unistd.h>
 
 #include <functional>
-#include <iostream>
 #include <atomic>
 
 namespace glue_libbase {
@@ -31,6 +29,7 @@ class Thread: private Noncopyable {
       mu_(), condvar_(mu_), bqueue_() {
   }
 
+  ~Thread();
   int Start();
   int Schedule(const FuncType& task);
   int Join();
@@ -40,10 +39,6 @@ class Thread: private Noncopyable {
   size_t TaskNum() { return bqueue_.size(); }
   pid_t GetThreadId() { return process_id_; }
   std::string Name() { return name_; }
-
-  ~Thread() {
-    LOG_CHECK(joined_, "Thread instance should be joined before exit");
-  }
 
  private:
   void Run();

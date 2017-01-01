@@ -4,6 +4,9 @@
 #include "libbase/mutexlock.h"
 #include "libbase/noncopyable.h"
 
+#include <assert.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <pthread.h>
 #include <sys/time.h>
 
@@ -12,39 +15,45 @@ class CondVar: private Noncopyable {
  public:
   explicit CondVar(MutexLock& mutex_lock): mutex_lock_(mutex_lock) {
     int ret = pthread_cond_init(&cond_var_, NULL);
-    LOG_CHECK(!ret, "pthread_cond_init failed");
+    assert(ret == 0);
+    (void)ret;
   }
 
   ~CondVar() {
     int ret = pthread_cond_destroy(&cond_var_);
-    LOG_CHECK(!ret, "pthread_cond_destroy failed");
+    assert(ret == 0);
+    (void)ret;
   }
 
   void Wait() {
     /* mu_ is a data member of MutexLock */
     int ret = pthread_cond_wait(&cond_var_, &mutex_lock_.mu_);
-    LOG_CHECK(!ret, "pthread_cond_wait failed");
+    assert(ret == 0);
+    (void)ret;
   }
   
   void WaitInSeconds(int secs) {
-    LOG_CHECK(secs >= 0, "");
+    assert(secs >= 0); 
     struct timeval now;
     ::gettimeofday(&now, NULL);
     struct timespec wait_time;
     wait_time.tv_sec = secs + now.tv_sec;
     wait_time.tv_nsec = now.tv_usec * 1000UL;
-    int ret = pthread_cond_timewait(&cond_var_, &mutex_lock_.mu_, &wait_time);
-    LOG_CHECK(!ret, "pthread_cond_timewait failed");
+    int ret = pthread_cond_timedwait(&cond_var_, &mutex_lock_.mu_, &wait_time);
+    assert(ret == 0);
+    (void)ret;
   }
 
   void NotifyOne() {
     int ret = pthread_cond_signal(&cond_var_);
-    LOG_CHECK(!ret, "pthread_cond_signal failed");
+    assert(ret == 0);
+    (void)ret;
   }
 
   void NotifyAll() {
     int ret = pthread_cond_broadcast(&cond_var_);
-    LOG_CHECK(!ret, "pthread_cond_broadcast failed");
+    assert(ret == 0);
+    (void)ret;
   }
 
  private:

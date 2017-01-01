@@ -2,10 +2,9 @@
 #define GLUE_LIBBASE_MUTEXLOCK_H_
 
 #include "libbase/noncopyable.h"
-#include "libbase/logger.h"
 
-#include <iostream>
-
+#include <stdio.h>
+#include <stdlib.h>
 #include <pthread.h>
 
 namespace glue_libbase {
@@ -13,22 +12,34 @@ class MutexLock: private Noncopyable {
  public:
   MutexLock() {
     int ret = pthread_mutex_init(&mu_, NULL);
-	LOG_CHECK(ret == 0, "pthread_mutex_init failed");
+    if (ret != 0) {
+      fprintf(stderr, "pthread_mutex_init failed");
+      abort();
+    }
   }
 
   void Lock() {
 	int ret = pthread_mutex_lock(&mu_);
-	LOG_CHECK(ret == 0, "pthread_mutex_lock failed");
+    if (ret != 0) {
+      fprintf(stderr, "pthread_mutex_lock failed");
+      abort();
+    }
   }
 
   void Unlock() {
     int ret = pthread_mutex_unlock(&mu_);
-    LOG_CHECK(ret == 0, "pthread_mutex_unlock failed");
+    if (ret != 0) {
+      fprintf(stderr, "pthread_mutex_unlock failed");
+      abort();
+    }
   }
 
   ~MutexLock() {
     int ret = pthread_mutex_destroy(&mu_);	
-    LOG_CHECK(ret == 0, "pthread_mutex_destroy failed");
+    if (ret != 0) {
+      fprintf(stderr, "pthread_mutex_destroy failed");
+      abort();
+    }
   }
 
  private:

@@ -1,5 +1,8 @@
 #include "libbase/thread.h"
 
+#include <assert.h>
+#include <stdio.h>
+
 namespace glue_libbase {
 namespace glue_libbase_thread {
   __thread pid_t cached_tid = 0;
@@ -17,7 +20,7 @@ pid_t ThreadId() {
 }
 
 namespace {
-/* Fork safe */
+// Fork safe.
 void AfterFork() {
   glue_libbase_thread::cached_tid = 0;
   ThreadId();
@@ -35,22 +38,29 @@ class ThreadIdInitializer {
 ThreadIdInitializer init_thread_id;
 } 
 
+Thread::~Thread() {
+  if (!joined_ && running_) {
+    fprintf(stderr, "Thread instance should be joined before exit");
+  }
+}
+
 int Thread::Start() {
   if (running_) {
-    LOG_WARN("Thread[%d] has already started", process_id_);
+    fprintf(stderr, "Thread[%d] has already started", process_id_);
     return 1;
   }
 
   int ret = pthread_create(&thread_id_, NULL, &RunWrapper, this);
-  LOG_CHECK(ret == 0, "pthread_create failed");
-  /* Wait thread to start */
-  MutexLockGuard m(mu_);
-  while (!running_) {
-    condvar_.Wait();
+  assert(ret == 0);
+  // Wait thread to start
+  {
+    MutexLockGuard m(mu_);
+    while (!running_) {
+      condvar_.Wait();
+    }
   }
   return (ret == 0);
 }
-
 
 /* TODO: No copies for large objects */
 int Thread::Schedule(const FuncType& task){
@@ -58,21 +68,20 @@ int Thread::Schedule(const FuncType& task){
   if (running_) {
     bqueue_.Insert(task);
   } else {
-    LOG_WARN("Thread(%s) is not running", name_.c_str());
-    ret = 0;
+    abort();
   }
   return ret;
 }
 
 int Thread::Join() {
-  LOG_CHECK(!joined_, "Joined one thread mulitple times");
-  LOG_CHECK(running_, "The thread is not started");
+  assert(!joined_);
+  assert(running_);
 
   /* A NULL functor could stop the thread */
   Schedule(FuncType(NULL));
   joined_ = true;
   int ret = pthread_join(thread_id_, NULL);
-  LOG_CHECK(ret == 0, "pthread_join failed");
+  assert(ret == 0);
   running_ = false;
   return (ret == 0);
 }
@@ -94,7 +103,6 @@ void Thread::Run() {
     running_ = true;
     condvar_.NotifyOne();
   }
-  LOG_INFO("Thread[%d] started.", process_id_);
   while (true) {
     FuncType task = bqueue_.Get();
     if (!task) {
@@ -109,9 +117,8 @@ void Thread::Run() {
   }
   size_t unfinished_task_num = bqueue_.size();
   if (unfinished_task_num) {
-    LOG_WARN("Thread[%d] exits with %d unfinished task(s)", process_id_, unfinished_task_num);
+    fprintf(stderr, "Thread[%d] exits with %d unfinished task(s)", process_id_, static_cast<int>(unfinished_task_num));
   }
-  LOG_INFO("Thread[%d] finished.", process_id_);
   running_ = false;
 }
 } // namespace glue_libbase
