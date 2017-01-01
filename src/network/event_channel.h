@@ -2,7 +2,7 @@
 #define GLUE_NETWORK_EVENTCHANNEL_H_
 
 #include "libbase/noncopyable.h"
-#include "libbase/logger.h"
+#include "libbase/loggerutil.h"
 
 #include <memory>
 #include <string>

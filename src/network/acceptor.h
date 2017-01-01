@@ -1,9 +1,9 @@
 #ifndef GLUE_NETWORK_ACCEPTOR_H_
 #define GLUE_NETWORK_ACCEPTOR_H_
 
-#include "libbase/logger.h"
+#include "libbase/loggerutil.h"
 #include "libbase/noncopyable.h"
-#include "network/buffer.h"
+#include "libbase/buffer.h"
 #include "network/socket.h"
 #include "network/socket_address.h"
 
@@ -31,7 +31,7 @@ class Acceptor : private glue_libbase::Noncopyable {
 
     /* Could use more flexible settings fot backlog? */
     int somaxconn_fd = ::open("/proc/sys/net/core/somaxconn", O_RDONLY);
-    ByteBuffer file_buf;
+    glue_libbase::ByteBuffer file_buf;
     file_buf.ReadFd(somaxconn_fd);
     int64_t somaxconn = atoll(file_buf.ToString().c_str());
     LOG_CHECK(somaxconn > 0, "");

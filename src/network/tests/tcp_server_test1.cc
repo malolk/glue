@@ -4,10 +4,10 @@
 #include "network/epoll.h"
 #include "network/connection.h"
 #include "network/acceptor.h"
-#include "network/buffer.h"
 #include "network/eventloop.h"
 #include "network/eventloop_pool.h"
 #include "network/tcp_server.h"
+#include "libbase/buffer.h"
 
 #include "unistd.h"
 
@@ -21,7 +21,7 @@ typedef std::unordered_map<Connection*, ConnectionType> ConnectionPoolType;
 
 /* Data processing logic should be put here. */ 
 void ReadConnection(ConnectionType conn_ptr, 
-                    glue_network::ByteBuffer& recv_buf) {
+                    glue_libbase::ByteBuffer& recv_buf) {
   LOG_INFO("sent %d bytes on fd=%d", recv_buf.ReadableBytes(), conn_ptr->Fd());
   conn_ptr->Send(recv_buf); 
 }

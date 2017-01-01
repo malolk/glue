@@ -1,5 +1,5 @@
 #include "network/socket.h"
-#include "libbase/logger.h"
+#include "libbase/loggerutil.h"
 
 #include <sys/uio.h>
 #include <errno.h>
@@ -105,7 +105,7 @@ void Socket::GetSockName(int sockfd, SocketAddress& sa) {
 } 
 
 static const int BACKUP_BUF_SIZE = 65535;
-ssize_t Socket::Receive(int sockfd, ByteBuffer& buf) {
+ssize_t Socket::Receive(int sockfd, glue_libbase::ByteBuffer& buf) {
   char backup[BACKUP_BUF_SIZE];     
   const size_t buf_size = buf.WritableBytes();
   const size_t buf_readable = buf.ReadableBytes();
@@ -155,7 +155,7 @@ ssize_t Socket::Receive(int sockfd, ByteBuffer& buf) {
   return recv_num;
 }
 
-ssize_t Socket::Send(int sockfd, ByteBuffer& buf) {
+ssize_t Socket::Send(int sockfd, glue_libbase::ByteBuffer& buf) {
   const size_t send_size = buf.ReadableBytes();
   ssize_t sent_num = ::write(sockfd, buf.AddrOfRead(), send_size);
   if (sent_num < 0)	{

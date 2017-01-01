@@ -1,9 +1,9 @@
 #ifndef GLUE_NETWORK_SOCKET_H_
 #define GLUE_NETWORK_SOCKET_H_
 
-#include "network/buffer.h"
 #include "network/socket_address.h"
-#include "libbase/logger.h"
+#include "libbase/buffer.h"
+#include "libbase/loggerutil.h"
 
 #include <string>
 
@@ -27,8 +27,8 @@ class Socket {
   static void StopWrite(int sockfd); 
   static void StopRead(int sockfd);
 
-  static ssize_t Send(int sockfd, ByteBuffer& buf);
-  static ssize_t Receive(int sockfd, ByteBuffer& buf);
+  static ssize_t Send(int sockfd, glue_libbase::ByteBuffer& buf);
+  static ssize_t Receive(int sockfd, glue_libbase::ByteBuffer& buf);
 
   static void GetPeerName(int sockfd, SocketAddress &sa);
   static void GetSockName(int sockfd, SocketAddress &sa);

@@ -3,11 +3,11 @@
 
 #include "network/socket.h"
 #include "network/epoll.h"
-#include "network/buffer.h"
 #include "event_channel.h"
+#include "libbase/buffer.h"
 #include "libbase/noncopyable.h"
 #include "libbase/timeutil.h"
-#include "libbase/logger.h"
+#include "libbase/loggerutil.h"
 
 #include <functional>
 #include <memory>
@@ -17,7 +17,7 @@ namespace glue_network {
 class Connection: private glue_libbase::Noncopyable,
 				  public std::enable_shared_from_this<Connection> {
  public:
-  typedef std::function<void(std::shared_ptr<Connection>, ByteBuffer& )> CallbackReadType;
+  typedef std::function<void(std::shared_ptr<Connection>, glue_libbase::ByteBuffer& )> CallbackReadType;
   typedef std::function<void(std::shared_ptr<Connection>)> CallbackInitType;
   typedef std::function<void()> CallbackCloseType;
 
@@ -40,7 +40,7 @@ class Connection: private glue_libbase::Noncopyable,
   void SetReadOperation(const CallbackReadType& cb);
   void SetCloseOperation(const CallbackCloseType& cb);
   void SetInitOperation(const CallbackInitType& cb);
-  void Send(ByteBuffer& data);
+  void Send(glue_libbase::ByteBuffer& data);
   void WriteCallback();
   void ReadCallback();
   void Close();
@@ -56,7 +56,7 @@ class Connection: private glue_libbase::Noncopyable,
     return sockfd_;
   }
  private:
-  void SendInLoopThread(ByteBuffer data);
+  void SendInLoopThread(glue_libbase::ByteBuffer data);
   void StopWrite();
   void StopRead();
   int sockfd_;
@@ -64,8 +64,8 @@ class Connection: private glue_libbase::Noncopyable,
   EventChannel channel_;
   /* state_ should be Atomic variable */
   std::atomic<int> state_;
-  ByteBuffer send_buf_;
-  ByteBuffer recv_buf_;
+  glue_libbase::ByteBuffer send_buf_;
+  glue_libbase::ByteBuffer recv_buf_;
   CallbackReadType read_cb_;
   CallbackCloseType close_cb_;
   CallbackInitType init_cb_;

@@ -14,7 +14,7 @@ void TestCase(const char* ip_str, uint16_t port, bool is_ipv6 = 0) {
   SocketAddress client_addr;
   Socket::GetSockName(fd, client_addr);
 
-  ByteBuffer buf;
+  glue_libbase::ByteBuffer buf;
   int cnt = 2;
   while (cnt-- > 0)	{
 	buf.AppendString(client_addr.ToString());

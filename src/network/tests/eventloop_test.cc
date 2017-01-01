@@ -4,8 +4,8 @@
 #include "network/epoll.h"
 #include "network/connection.h"
 #include "network/acceptor.h"
-#include "network/buffer.h"
 #include "network/eventloop.h"
+#include "libbase/buffer.h"
 
 #include <unordered_map>
 #include <algorithm>
@@ -17,7 +17,7 @@ typedef std::unordered_map<Connection*, ConnectionType> ConnectionPoolType;
 
 /* Data processing logic should be put here. */ 
 void ReadConnection(ConnectionType conn_ptr, 
-                    glue_network::ByteBuffer& recv_buf) {
+                    glue_libbase::ByteBuffer& recv_buf) {
   conn_ptr->Send(recv_buf);  
 }
 

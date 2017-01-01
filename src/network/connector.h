@@ -4,7 +4,7 @@
 #include "network/socket.h"
 #include "network/socket_address.h"
 #include "libbase/noncopyable.h"
-#include "libbase/logger.h"
+#include "libbase/loggerutil.h"
 
 namespace glue_network {
 class Connector : private glue_libbase::Noncopyable {

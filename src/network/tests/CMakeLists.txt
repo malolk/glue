@@ -1,6 +1,3 @@
-add_executable(buffer_test buffer_test.cc)
-target_link_libraries(buffer_test glue_network)
-
 add_executable(epoll_test epoll_test.cc)
 target_link_libraries(epoll_test glue_network)
 

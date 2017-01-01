@@ -19,7 +19,7 @@ void TestIpv4() {
     Socket::EnableNonBlock(cli_fd, 0); // Blocking I/O
     if (cli_fd >= 0) {
       LOG_INFO("Receive Connect from client: %s ", client_addr.ToString().c_str());
-      ByteBuffer buf;
+      glue_libbase::ByteBuffer buf;
       while (true) {
         ssize_t read_num = Socket::Receive(cli_fd, buf);  
         if (read_num == 0) {
@@ -56,7 +56,7 @@ void TestIpv6() {
     Socket::EnableNonBlock(cli_fd, 0); // Blocking I/O
     if (cli_fd >= 0) {
       LOG_INFO("Receive Connect from client: %s ", client_addr.ToString().c_str());
-      ByteBuffer buf;
+      glue_libbase::ByteBuffer buf;
       while (true) {
         ssize_t read_num = Socket::Receive(cli_fd, buf);  
         if (read_num == 0) {

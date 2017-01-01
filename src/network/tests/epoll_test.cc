@@ -4,7 +4,7 @@
 #include "network/epoll.h"
 #include "network/connection.h"
 #include "network/acceptor.h"
-#include "network/buffer.h"
+#include "libbase/buffer.h"
 
 #include <unordered_map>
 #include <algorithm>
@@ -34,7 +34,7 @@ void CloseConnection(glue_network::Epoll* epoll_ptr, ConnectionPoolType& conn_po
 
 /* Data processing logic should be put here. */ 
 void ReadConnection(ConnectionType conn_ptr, 
-                    glue_network::ByteBuffer& recv_buf) {
+                    glue_libbase::ByteBuffer& recv_buf) {
   conn_ptr->Send(recv_buf);  
 }
 
