@@ -19,7 +19,7 @@ The project Glue is built for three reasons:
 
 ## Features
 
-* Used the RALL mechanism and smart pointer to manage the lifecycle of objects.
+* Used the RAII mechanism and smart pointer to manage the lifecycle of objects.
 * Used the 4-ary heap to store timers, while the delete operation or update operation of 4-ary heap could be used on any middle element efficiently, not just the top-element.
 * Move any comming connection to the corresponding eventloop, so the connection-deletion could be safely and effciently.
 * Support varidic-parameter logging abilities with flexible configurations.
