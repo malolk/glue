@@ -1,7 +1,7 @@
-#include "../bounded_blocking_queue.h"
-#include "../thread.h"
-#include "../logger.h"
-#include "../waitmember.h"
+#include "libbase/bounded_blocking_queue.h"
+#include "libbase/thread.h"
+#include "libbase/logger.h"
+#include "libbase/waitmember.h"
 
 #include <vector>
 #include <string>
@@ -10,9 +10,9 @@
 
 #include <unistd.h>
 
-typedef glue_libbase::BoundedBlockingQueue<int> QueueType;
+typedef libbase::BoundedBlockingQueue<int> QueueType;
 typedef std::function<void()> FuncType;
-typedef glue_libbase::WaitMember WType;
+typedef libbase::WaitMember WType;
 
 void producer(QueueType* q, int start, WType* barrier) { 
   std::string ret;
@@ -46,8 +46,8 @@ void TestCase(int cap) {
   FuncType producer_func_10 = std::bind(producer, &q, 10, &barrier);
   FuncType consumer_func = std::bind(consumer, &q);
 
-  glue_libbase::Thread producer_1, producer_5, producer_10;
-  glue_libbase::Thread consumer_1, consumer_2;
+  libbase::Thread producer_1, producer_5, producer_10;
+  libbase::Thread consumer_1, consumer_2;
 
   producer_1.Start();
   producer_5.Start();

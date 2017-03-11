@@ -7,7 +7,7 @@
 #include <sys/stat.h>  // for stat()
 #include <unistd.h> 
 
-namespace glue_httpd {
+namespace httpd {
 namespace {
   const extern std::string base_path = "docs";
 }	
@@ -268,5 +268,5 @@ void HttpRequest::ExtractMethod(const std::string& line) {
   	version_ = segments[2];
   }
 }
-} // namespace glue_httpd
+} // namespace httpd
 

@@ -10,18 +10,18 @@
 #include <string>
 #include <memory>
 
-namespace glue_httpd {
-class HttpServer: private glue_libbase::Noncopyable {
+namespace httpd {
+class HttpServer: private libbase::Noncopyable {
  public:
-  typedef std::shared_ptr<glue_network::Connection> ConnectionPtr;
-  HttpServer(const glue_network::SocketAddress& server_addr, int thread_num)
+  typedef std::shared_ptr<network::Connection> ConnectionPtr;
+  HttpServer(const network::SocketAddress& server_addr, int thread_num)
     : server_(server_addr, thread_num, CallbackOnRequest) {
   }
 
   void Start();
 private:
-  static void CallbackOnRequest(ConnectionPtr conn, glue_libbase::ByteBuffer& buf);
-  glue_network::TcpServer server_;
+  static void CallbackOnRequest(ConnectionPtr conn, libbase::ByteBuffer& buf);
+  network::TcpServer server_;
 };
-} // namespace glue_httpd
+} // namespace httpd
 #endif // GLUE_HTTP_SERVER_H_

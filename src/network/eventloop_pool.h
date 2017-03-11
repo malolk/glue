@@ -9,8 +9,8 @@
 #include <vector>
 #include <memory>
 
-namespace glue_network {
-class EventLoopPool: private glue_libbase::Noncopyable {
+namespace network {
+class EventLoopPool: private libbase::Noncopyable {
  public:
   explicit EventLoopPool(int pool_size) 
     : pool_size_(pool_size), dispatch_id_(0) {
@@ -29,5 +29,5 @@ class EventLoopPool: private glue_libbase::Noncopyable {
   int dispatch_id_;
   std::vector<std::shared_ptr<EventLoop>> pool_;
 };
-} // glue_network
+} // network
 #endif // GLUE_NETWORK_EVENTLOOP_POOL_H_

@@ -4,8 +4,8 @@
 
 #include <functional>
 
-namespace glue_httpd {
-void HttpServer::CallbackOnRequest(ConnectionPtr conn, glue_libbase::ByteBuffer& buf) {
+namespace httpd {
+void HttpServer::CallbackOnRequest(ConnectionPtr conn, libbase::ByteBuffer& buf) {
   HttpRequest http_req(conn);
   if (http_req.IsAlready(buf)) {
 	http_req.DoRequest(buf);
@@ -16,4 +16,4 @@ void HttpServer::CallbackOnRequest(ConnectionPtr conn, glue_libbase::ByteBuffer&
 void HttpServer::Start() {
   server_.Run();
 }
-} // namespace glue_httpd
+} // namespace httpd

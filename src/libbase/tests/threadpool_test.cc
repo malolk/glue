@@ -1,7 +1,7 @@
-#include "../threadpool.h"
-#include "../logger.h"
-#include "../mutexlock.h"
-#include "../waitmember.h"
+#include "libbase/threadpool.h"
+#include "libbase/logger.h"
+#include "libbase/mutexlock.h"
+#include "libbase/waitmember.h"
 
 #include <unistd.h>
 
@@ -12,17 +12,17 @@
 static const long LOOP = 10;
 static const long ANS = (1 + LOOP)*LOOP/2;
 
-glue_libbase::MutexLock mu;
+libbase::MutexLock mu;
 volatile long long global_sum;
 
 void DoSum(long n) {
-  glue_libbase::MutexLockGuard m(mu);
+  libbase::MutexLockGuard m(mu);
   global_sum += n;
 }
 
 void TestCase(int size) {
   global_sum = 0;
-  glue_libbase::ThreadPool thread_pool(size);
+  libbase::ThreadPool thread_pool(size);
   thread_pool.Start();
 
   for (int index = 1; index <= LOOP; ++index) {

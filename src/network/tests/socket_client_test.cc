@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 void TestIpv6() {
-  using namespace glue_network;
+  using namespace network;
   int fd = Socket::NewSocket(AF_INET6, SOCK_STREAM, 0);
   Socket::EnableAddrReuse(fd, 1);
   Socket::EnablePortReuse(fd, 1);
@@ -18,7 +18,7 @@ void TestIpv6() {
   Socket::GetSockName(fd, client_addr);
   LOG_INFO("\nSocket: %s connected to ::1:8080\n", client_addr.ToString().c_str());
 
-  glue_libbase::ByteBuffer buf;
+  libbase::ByteBuffer buf;
   int cnt = 10;
   while (cnt-- > 0)	{
 	buf.AppendString(client_addr.ToString());
@@ -34,7 +34,7 @@ void TestIpv6() {
 }
 
 void TestIpv4() {
-  using namespace glue_network;
+  using namespace network;
   int fd = Socket::NewSocket();
   Socket::EnableAddrReuse(fd, 1);
   Socket::EnablePortReuse(fd, 1);
@@ -46,7 +46,7 @@ void TestIpv4() {
   Socket::GetSockName(fd, client_addr);
   LOG_INFO("\nSocket: %s connected to 127.0.0.1:8080\n", client_addr.ToString().c_str());
 
-  glue_libbase::ByteBuffer buf;
+  libbase::ByteBuffer buf;
   int cnt = 10;
   while (cnt-- > 0)	{
 	buf.AppendString(client_addr.ToString());

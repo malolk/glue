@@ -18,8 +18,8 @@ int writes, fired;
 int num_pipes, num_actives, num_writes;
 
 std::vector<int> pipes;
-std::vector<glue_network::EventChannel*> chans;
-glue_network::Epoll* epoll_ptr = NULL;
+std::vector<network::EventChannel*> chans;
+network::Epoll* epoll_ptr = NULL;
 
 void ReadCallback(int fd, int idx) {
   char ch;
@@ -59,11 +59,11 @@ void RunOnce() {
   recv_cnt = 0;
   writes = num_writes;
 
-  int64_t start = glue_libbase::TimeUtil::NowMicros();
+  int64_t start = libbase::TimeUtil::NowMicros();
 
   epoll_ptr->Run();
 
-  int64_t span = glue_libbase::TimeUtil::ElapsedMicros(start);
+  int64_t span = libbase::TimeUtil::ElapsedMicros(start);
   std::cout << span << " us" << std::endl; 
 }
 
@@ -115,12 +115,12 @@ int main(int argc, char* argv[]) {
     }  
   }
 
-  glue_network::Epoll epoll;
+  network::Epoll epoll;
   epoll.Initialize();
   epoll_ptr = &epoll;
   
   for (int i = 0; i < num_pipes; i++) {
-    chans.push_back(new glue_network::EventChannel(epoll_ptr, pipes[i * 2]));  
+    chans.push_back(new network::EventChannel(epoll_ptr, pipes[i * 2]));  
   }
 
   std::cout << "=========start=========\n";

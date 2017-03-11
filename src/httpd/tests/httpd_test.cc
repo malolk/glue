@@ -35,8 +35,8 @@ int main(int argc, char* argv[]) {
       }     
     }
   }
-  glue_network::SocketAddress server_addr(ip_str, port);
-  glue_httpd::HttpServer http_server(server_addr, thread_num);
+  network::SocketAddress server_addr(ip_str, port);
+  httpd::HttpServer http_server(server_addr, thread_num);
   http_server.Start();
 
   return 0;

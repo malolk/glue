@@ -5,7 +5,7 @@
 #include <string>
 
 void TestCase(const char* ip_str, uint16_t port, bool is_ipv6) {
-  using namespace glue_network;
+  using namespace network;
   SocketAddress server_addr(ip_str, port, is_ipv6);
   Acceptor acceptor(server_addr, 0); /* Make listen_fd_ blocking I/O in this test. */
   LOG_INFO("Listen on %s ...", server_addr.ToString().c_str());
@@ -17,7 +17,7 @@ void TestCase(const char* ip_str, uint16_t port, bool is_ipv6) {
     if (cli_fd >= 0) {
       Socket::GetSockName(cli_fd, client_addr);
       LOG_INFO("Receive Connect from client: %s ", client_addr.ToString().c_str());
-      glue_libbase::ByteBuffer buf;
+      libbase::ByteBuffer buf;
       while (true) {
         ssize_t read_num = Socket::Receive(cli_fd, buf);  
         if (read_num == 0) {

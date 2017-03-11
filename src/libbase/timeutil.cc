@@ -8,7 +8,7 @@
 #include <string.h>
 #include <errno.h>
 
-namespace glue_libbase {
+namespace libbase {
 int TimeUtil::ToStringOfMicros(char* buf, int len, int flag) {
   struct timeval tv;
   gettimeofday(&tv, NULL);
@@ -86,4 +86,4 @@ int64_t TimeUtil::ElapsedMicros(const int64_t& start_micros) {
 int64_t TimeUtil::ElapsedSeconds(const int64_t& start_micros) {
   return (NowMicros() - start_micros) / 1000000LL;
 }
-} // namespace glue_libbase
+} // namespace libbase

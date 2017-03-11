@@ -11,7 +11,7 @@
 #include <string.h>
 #include <errno.h>
 
-namespace glue_libbase {
+namespace libbase {
 
 namespace {
 const char config_path[] = "logger.conf";
@@ -52,14 +52,14 @@ void Logger::Initialize() {
   assert(level_ >= kTRACE && level_ <= kFATAL);
   spared_bufs_.reserve(LOGGER_MIN_BUF_NUM);
   for (int i = 0; i < LOGGER_MIN_BUF_NUM; ++i) {
-    spared_bufs_.emplace_back(new glue_libbase::ByteBuffer);
+    spared_bufs_.emplace_back(new libbase::ByteBuffer);
     spared_bufs_.back()->SpareSpace(LOGGER_BUF_SIZE);
   }
 }
 
 /* Background thread function doing file dump. */
 void Logger::BackgroundDump() {
-  std::vector<std::unique_ptr<glue_libbase::ByteBuffer>> ready_bufs;
+  std::vector<std::unique_ptr<libbase::ByteBuffer>> ready_bufs;
   running_ = true;
   while (running_) {
     bool memory_warn = false;
@@ -137,7 +137,7 @@ void Logger::WriteBuffer(const char* data, int size) {
         spared_bufs_.pop_back();
       } else {
         // spared bufs is empty, allocate one. 
-        current_buf_.reset(new glue_libbase::ByteBuffer);
+        current_buf_.reset(new libbase::ByteBuffer);
         current_buf_->SpareSpace(LOGGER_BUF_SIZE);
       }
       current_buf_->Append(data, size);
@@ -149,7 +149,7 @@ void Logger::WriteBuffer(const char* data, int size) {
       spared_bufs_.pop_back();
     } else {
       // spared bufs is empty, allocate one. 
-      current_buf_.reset(new glue_libbase::ByteBuffer);
+      current_buf_.reset(new libbase::ByteBuffer);
       current_buf_->SpareSpace(LOGGER_BUF_SIZE);
     }
     current_buf_->Append(data, size);
@@ -336,4 +336,4 @@ void Logger::LogCheck(const char* file, int line, const char* func, bool flag, c
   if (flag) return;
   LogFatal(file, line, func, "Check Failed: %s!", msg);
 }
-} // namespace glue_libbase
+} // namespace libbase

@@ -6,7 +6,7 @@
 #include "libbase/mutexlock.h"
 #include "libbase/noncopyable.h"
 
-namespace glue_libbase {
+namespace libbase {
 class WaitMember: private Noncopyable {
  public:
   explicit WaitMember(int num): member_num_(num), mu_(), condvar_(mu_) { }
@@ -26,6 +26,6 @@ private:
 	mutable MutexLock mu_;
 	CondVar condvar_;
 };
-}  // namespace glue_libbase
+}  // namespace libbase
 
 #endif  // GLUE_LIBBASE_WAITMEMBER_H_

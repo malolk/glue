@@ -6,7 +6,7 @@
 
 #include <algorithm>
 
-namespace glue_libbase {
+namespace libbase {
 const size_t ByteBuffer::default_capacity_  = 1024;
 
 /* Find last substr that equal to given str, the return pos shoud sit before end */
@@ -104,4 +104,4 @@ void ByteBuffer::MoveReadPos(size_t size) {
   }
 }
 
-} // namespace glue_libbase
+} // namespace libbase

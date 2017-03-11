@@ -30,7 +30,7 @@ std::string GetArg(const std::string& str) {
 }
 
 int main() {
-  glue_network::ByteBuffer buf;
+  network::ByteBuffer buf;
   buf.ReadFd(0);
   std::vector<std::string> query_string = SliceStrClearly(buf.ToString(), "&");
   buf.Reset();

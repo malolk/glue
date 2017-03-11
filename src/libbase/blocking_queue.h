@@ -7,7 +7,7 @@
 
 #include <deque>
 
-namespace glue_libbase {
+namespace libbase {
 template<typename T>
 class BlockingQueue: private Noncopyable {
  public:

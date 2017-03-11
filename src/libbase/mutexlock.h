@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-namespace glue_libbase {
+namespace libbase {
 class MutexLock: private Noncopyable {
  public:
   MutexLock() {

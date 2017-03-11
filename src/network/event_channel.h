@@ -9,10 +9,10 @@
 #include <functional>
 #include <atomic>
 
-namespace glue_network {
+namespace network {
 // just a interface class for epoll
 class Epoll;
-class EventChannel: private glue_libbase::Noncopyable {
+class EventChannel: private libbase::Noncopyable {
  public:
   typedef std::function<void()> CallbackType;
   explicit EventChannel(Epoll* ep) 
@@ -91,5 +91,5 @@ class EventChannel: private glue_libbase::Noncopyable {
   CallbackType write_cb_;
   CallbackType close_cb_;
 };
-} // namespace glue_network
+} // namespace network
 #endif // GLUE_NETWORK_EVENTCHANNEL_H_

@@ -18,8 +18,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-using namespace glue_network;
-using namespace glue_libbase;
+using namespace network;
+using namespace libbase;
 
 ByteBuffer ball;
 
@@ -53,14 +53,14 @@ class Client : private Noncopyable {
     return send_num_;
   }
  private:
-  void ReadCallback(std::shared_ptr<glue_network::Connection> conn, ByteBuffer& buf);
-  void InitCallback(std::shared_ptr<glue_network::Connection> conn);
+  void ReadCallback(std::shared_ptr<network::Connection> conn, ByteBuffer& buf);
+  void InitCallback(std::shared_ptr<network::Connection> conn);
   TcpClient cli_;
   size_t send_num_;
   std::atomic<bool> running_;
 };
 
-void Client::ReadCallback(std::shared_ptr<glue_network::Connection> conn, ByteBuffer& buf) {
+void Client::ReadCallback(std::shared_ptr<network::Connection> conn, ByteBuffer& buf) {
   if (!running_) {
     conn->Close();
   } else {
@@ -69,7 +69,7 @@ void Client::ReadCallback(std::shared_ptr<glue_network::Connection> conn, ByteBu
   }
 }
 
-void Client::InitCallback(std::shared_ptr<glue_network::Connection> conn) {
+void Client::InitCallback(std::shared_ptr<network::Connection> conn) {
   running_ = true;
   ByteBuffer ball_backup;
   ball_backup.AppendBuffer(ball);
@@ -95,7 +95,7 @@ class ClientCluster : private Noncopyable {
       eventloop_pool_.Start();
     }
    
-    glue_network::Timer timer(std::bind(&ClientCluster::Timeout, this), glue_libbase::TimeUtil::NowMicros() + time_range_ * 1000000LL);
+    network::Timer timer(std::bind(&ClientCluster::Timeout, this), libbase::TimeUtil::NowMicros() + time_range_ * 1000000LL);
     epoller.RunTimer(NULL, timer);
     
     for (int index = 0; index < client_num_; ++index) {
@@ -131,13 +131,13 @@ class ClientCluster : private Noncopyable {
               << " MiB/s" << std::endl;
   }
 
-  glue_network::SocketAddress server_addr_;
+  network::SocketAddress server_addr_;
   const int client_num_;
   const int thread_num_;
   const int time_range_;
-  glue_network::Epoll* epoll_ptr_;
+  network::Epoll* epoll_ptr_;
   std::vector<std::unique_ptr<Client>> cli_cluster_;
-  glue_network::EventLoopPool eventloop_pool_;
+  network::EventLoopPool eventloop_pool_;
 };
 
 int main(int argc, char* argv[]) {
@@ -191,7 +191,7 @@ int main(int argc, char* argv[]) {
     ball.AppendString(unit);  
   }
   
-  glue_network::SocketAddress server_addr(ip_str, port);  
+  network::SocketAddress server_addr(ip_str, port);  
   ClientCluster cluster(server_addr, client, time, thread);
   cluster.Start();
   

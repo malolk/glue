@@ -18,12 +18,12 @@
 #include <string.h>
 #include <unistd.h>
 
-namespace glue_httpd {
+namespace httpd {
 class HttpRequest {
  public:
-  typedef std::shared_ptr<glue_network::Connection> ConnectionPtr;
+  typedef std::shared_ptr<network::Connection> ConnectionPtr;
   typedef struct stat PathStat;
-  typedef glue_libbase::ByteBuffer Buf;
+  typedef libbase::ByteBuffer Buf;
   explicit HttpRequest(const ConnectionPtr& conn): conn_(conn) { 
   }
 
@@ -63,5 +63,5 @@ class HttpRequest {
   std::map<std::string, std::string> headers_;
   std::string body_;	
 };
-} // namespace glue_httpd
+} // namespace httpd
 #endif // GLUE_HTTP_REQUEST_H_

@@ -2,7 +2,7 @@
 #include "network/epoll.h"
 #include "libbase/loggerutil.h"
 
-namespace glue_network {  
+namespace network {  
 void EventChannel::HandleRead() {  
   epoll_ptr_->MustInLoopThread();
   if (read_cb_) {
@@ -106,4 +106,4 @@ void EventChannel::EnableEvent(bool flag, uint32_t set_bit) {
   epoll_ptr_->RunNowOrLater(std::bind(&Epoll::UpdateChannel, epoll_ptr_, this));
 }
 
-} // namespace glue_network
+} // namespace network

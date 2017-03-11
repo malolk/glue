@@ -8,7 +8,7 @@
 
 #include <deque>
 
-namespace glue_libbase {
+namespace libbase {
 template<typename T>
 class BoundedBlockingQueue: private Noncopyable {
  public:
@@ -49,6 +49,6 @@ class BoundedBlockingQueue: private Noncopyable {
   CondVar insert_cv_;
   std::deque<T> queue_;
 }; 	
-} // namespace glue_libbase
+} // namespace libbase
 #endif // GLUE_LIBBASE_BOUNDEDBLOCKINGQUEUE_H_
 

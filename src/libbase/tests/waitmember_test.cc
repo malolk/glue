@@ -1,15 +1,15 @@
-#include "../waitmember.h"
-#include "../thread.h"
-#include "../logger.h"
+#include "libbase/waitmember.h"
+#include "libbase/thread.h"
+#include "libbase/logger.h"
 
 #include <vector>
 
 #include <stdlib.h>
 #include <stdio.h>
 
-typedef glue_libbase::Thread Thread;
-typedef glue_libbase::Thread::FuncType Func;
-typedef glue_libbase::WaitMember Bar;
+typedef libbase::Thread Thread;
+typedef libbase::Thread::FuncType Func;
+typedef libbase::WaitMember Bar;
 
 void ThreadFunc(int id, Bar* barrier) {
 	barrier->Done();

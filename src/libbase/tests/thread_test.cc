@@ -1,4 +1,4 @@
-#include "../thread.h"
+#include "libbase/thread.h"
 
 #include <unistd.h>
 
@@ -8,21 +8,21 @@
 using namespace std;
 
 void task1() {
-  cout << "task: Current thread id: " << glue_libbase::ThreadId() << endl;
+  cout << "task: Current thread id: " << libbase::ThreadId() << endl;
 }
 
 void task2(int sec) {
-  cout << "task1: Current thread id: " << glue_libbase::ThreadId() << endl;
+  cout << "task1: Current thread id: " << libbase::ThreadId() << endl;
   sleep(sec);
 }
 
 
 int main() {
-  cout << "Process ID: " << glue_libbase::ThreadId() << endl;
+  cout << "Process ID: " << libbase::ThreadId() << endl;
   std::function<void()> func = std::bind(task2, 2), func1 = task1, func2 = task1; 
   std::function<void()> func3 = std::bind(task2, 3);
 
-  glue_libbase::Thread thread1, thread2;
+  libbase::Thread thread1, thread2;
   thread1.Start();
   thread2.Start();
  

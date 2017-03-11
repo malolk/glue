@@ -1,10 +1,10 @@
 //#include <libbase/TimeStamp.h>
-#include "../timeutil.h"
+#include "libbase/timeutil.h"
 
 #include <iostream>
 
 int main() {
-  using namespace glue_libbase;
+  using namespace libbase;
   int64_t start_micros = 0;
   TimeUtil::StartTime(start_micros);
   std::cout << "start time in micros: " << start_micros << std::endl;

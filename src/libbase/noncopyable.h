@@ -1,7 +1,7 @@
 #ifndef GLUE_LIBBASE_NONCOPYABLE_H_
 #define GLUE_LIBBASE_NONCOPYABLE_H_
 
-namespace glue_libbase {
+namespace libbase {
 class Noncopyable 
 {
  protected:

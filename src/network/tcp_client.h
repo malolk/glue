@@ -15,8 +15,8 @@
 #include <memory>
 #include <functional>
 
-namespace glue_network {
-class TcpClient: private glue_libbase::Noncopyable {
+namespace network {
+class TcpClient: private libbase::Noncopyable {
  public:
   TcpClient(const SocketAddress& server_addr, int max_runs)
     : max_runs_(max_runs), sockfd_(-1), owned_(false), 
@@ -50,5 +50,5 @@ class TcpClient: private glue_libbase::Noncopyable {
   std::shared_ptr<Connection> conn_;
   Epoll* epoll_ptr_;
 };	
-} // namespace glue_network
+} // namespace network
 #endif // GLUE_NETWORK_TCPCLIENT_H_

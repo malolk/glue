@@ -12,7 +12,7 @@
 #include <memory>
 
 /* A n-ary heap implementation. And it's not thread safe */
-namespace glue_libbase {
+namespace libbase {
 template <class T>
 bool DefaultComparator(const T& lhs, const T& rhs);
 
@@ -219,5 +219,5 @@ int Heap<T>::Update(std::weak_ptr<Element<T>>& id, const T& data) {
     return 0; /* The element has been deleted. */
   }
 }
-} // namespace glue_libbase
+} // namespace libbase
 #endif // GLUE_LIBBASE_HEAP_H_

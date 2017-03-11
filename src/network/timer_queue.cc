@@ -4,7 +4,7 @@
 
 #include <string.h>
 
-namespace glue_network {
+namespace network {
 const int TimerQueue::max_num_one_shot_ = 1000;
 bool CompareTimer(const Timer& lhs, const Timer& rhs) {
   return (lhs.GetExpiration() < rhs.GetExpiration());
@@ -23,7 +23,7 @@ void SetTimerFd(int fd, int64_t expiration) {
 
 void StartTimerFd(int fd, int64_t when) {
   /* Here, use the time difference relative to current time to setting timerfd. */
-  int64_t diff = when - glue_libbase::TimeUtil::NowMicros();
+  int64_t diff = when - libbase::TimeUtil::NowMicros();
   if (diff < 0)  {
     diff = 0;
   }
@@ -88,7 +88,7 @@ void TimerQueue::ReadTimerChannel() {
   LOG_CHECK(ret == static_cast<ssize_t>(sizeof(uint64_t)), "timerfd read error");
   
   int timeout_num = 0;
-  int64_t now_time = glue_libbase::TimeUtil::NowMicros();
+  int64_t now_time = libbase::TimeUtil::NowMicros();
   while (!timer_pool_.Empty() && timeout_num < max_num_one_shot_) {
     if (timer_pool_.Top().GetExpiration() <= now_time) {
       timer_pool_.Top().Timeout();
@@ -123,4 +123,4 @@ void TimerQueue::Initialize() {
   timer_chann_.Initialize(std::bind(&TimerQueue::ReadTimerChannel, this), CallbackWrite, CallbackClose, timer_fd_);
   timer_chann_.AddIntoLoopWithRead();
 }
-} // namespace glue_network
+} // namespace network

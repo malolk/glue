@@ -11,27 +11,27 @@
 #include <algorithm>
 #include <functional>
 
-typedef glue_network::Connection Connection;
+typedef network::Connection Connection;
 typedef std::shared_ptr<Connection> ConnectionType;
 typedef std::unordered_map<Connection*, ConnectionType> ConnectionPoolType;
 
 /* Data processing logic should be put here. */ 
 void ReadConnection(ConnectionType conn_ptr, 
-                    glue_libbase::ByteBuffer& recv_buf) {
+                    libbase::ByteBuffer& recv_buf) {
   conn_ptr->Send(recv_buf);  
 }
 
-void ReadListenSocket(glue_network::Acceptor* acceptor,
-                      glue_network::EventLoop* event_loop) {
-  glue_network::SocketAddress conn_addr;
+void ReadListenSocket(network::Acceptor* acceptor,
+                      network::EventLoop* event_loop) {
+  network::SocketAddress conn_addr;
   while (true) {
     int ret = acceptor->Accept();
 	if (ret >= 0) {
-        glue_network::Epoll* epoll_ptr = event_loop->EpollPtr();
-        epoll_ptr->RunNowOrLater(std::bind(&glue_network::EventLoop::NewConnection, event_loop, ret, ReadConnection));
+        network::Epoll* epoll_ptr = event_loop->EpollPtr();
+        epoll_ptr->RunNowOrLater(std::bind(&network::EventLoop::NewConnection, event_loop, ret, ReadConnection));
         LOG_INFO("New connection on fd=%d", ret);
     } else {
-      if (ret == glue_network::Socket::kRETRY) {
+      if (ret == network::Socket::kRETRY) {
         /* Already accept all the connection. */
 	    break;
       } else {
@@ -52,11 +52,11 @@ void CloseListenSocket() {
 }
 
 void RunServer() {
-  glue_network::EventLoop event_loop;
-  glue_network::Epoll* epoll_ptr = event_loop.Start();
-  glue_network::SocketAddress server_addr; /* Default server address: 127.0.0.1:8080. */
-  glue_network::Acceptor acceptor(server_addr); /* Make listen socket non-blocking. */
-  glue_network::EventChannel acceptor_chann(epoll_ptr, acceptor.Fd());
+  network::EventLoop event_loop;
+  network::Epoll* epoll_ptr = event_loop.Start();
+  network::SocketAddress server_addr; /* Default server address: 127.0.0.1:8080. */
+  network::Acceptor acceptor(server_addr); /* Make listen socket non-blocking. */
+  network::EventChannel acceptor_chann(epoll_ptr, acceptor.Fd());
   acceptor_chann.Initialize(std::bind(ReadListenSocket, &acceptor, &event_loop), 
                             WriteListenSocket, CloseListenSocket);
   acceptor_chann.AddIntoLoopWithRead();

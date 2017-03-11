@@ -7,7 +7,7 @@
 #include <time.h> 
 #include <string.h>
 
-namespace glue_libbase {
+namespace libbase {
 class TimeUtil {
  public:
   static std::string ToStringOfMicros(int64_t micro_sec);

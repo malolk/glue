@@ -16,11 +16,11 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-namespace glue_httpd {
+namespace httpd {
 class HttpResponse {
  public:
-  typedef std::shared_ptr<glue_network::Connection> ConnectionPtr;
-  typedef glue_libbase::ByteBuffer Buf;
+  typedef std::shared_ptr<network::Connection> ConnectionPtr;
+  typedef libbase::ByteBuffer Buf;
   explicit HttpResponse(const ConnectionPtr& conn): conn_(conn) {
   }
   
@@ -38,5 +38,5 @@ class HttpResponse {
   std::string ToHeaderPart(const std::string& file_type, size_t length, const std::string& status);
   ConnectionPtr conn_;
 };
-} // namespace glue_httpd
+} // namespace httpd
 #endif // GLUE_HTTP_RESPONSE_H_

@@ -22,7 +22,7 @@ std::string FormOutput(std::string body) {
 }
 
 int main() {
-  glue_network::ByteBuffer buf;
+  network::ByteBuffer buf;
   buf.ReadFd(0);
   const char* pos = buf.Find("=");
   if (pos != nullptr) {

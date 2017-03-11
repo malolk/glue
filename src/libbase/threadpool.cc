@@ -1,6 +1,6 @@
 #include "libbase/threadpool.h"
 
-namespace glue_libbase {
+namespace libbase {
 void ThreadPool::Start() {
   if (state_ > kSTARTUP) {
     LOG_WARN("ThreadPool is already started with %d threads", size_);
@@ -57,4 +57,4 @@ void ThreadPool::Stop() {
   }
   state_ = kSTOP;
 }
-}  // namespace glue_libbase 
+}  // namespace libbase 

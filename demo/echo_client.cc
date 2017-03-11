@@ -3,8 +3,8 @@
 #include <iostream>
 #include <string>
 
-using namespace glue_network;
-using namespace glue_libbase;
+using namespace network;
+using namespace libbase;
 
 void ReadCallback(std::shared_ptr<SocketConnection::Connection> conn, ByteBuffer& buf) {
   std::cout << buf.ToString() << std::endl;

@@ -13,13 +13,13 @@ void NonRepeated() {
 }
 
 int main() {
-  glue_network::Timer timer_oneshot(NonRepeated, glue_libbase::TimeUtil::NowMicros() + 5000000LL); /* After 5 seconds. */
-  glue_network::Timer timer_repeated(Repeated, 0, 2000000LL); /* Every 2 seconds. */
-  glue_network::EventLoop eventloop;
+  network::Timer timer_oneshot(NonRepeated, libbase::TimeUtil::NowMicros() + 5000000LL); /* After 5 seconds. */
+  network::Timer timer_repeated(Repeated, 0, 2000000LL); /* Every 2 seconds. */
+  network::EventLoop eventloop;
   eventloop.Start();
-  glue_network::Epoll* epoll_ptr = eventloop.EpollPtr();
+  network::Epoll* epoll_ptr = eventloop.EpollPtr();
   epoll_ptr->RunTimer(NULL, timer_oneshot);
-  glue_network::TimerQueue::TimerIdType id;
+  network::TimerQueue::TimerIdType id;
   epoll_ptr->RunTimer(&id, timer_repeated);
   sleep(6);
   epoll_ptr->CancelTimer(&id);

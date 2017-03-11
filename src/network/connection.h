@@ -13,11 +13,11 @@
 #include <memory>
 #include <atomic>
 
-namespace glue_network {
-class Connection: private glue_libbase::Noncopyable,
+namespace network {
+class Connection: private libbase::Noncopyable,
 				  public std::enable_shared_from_this<Connection> {
  public:
-  typedef std::function<void(std::shared_ptr<Connection>, glue_libbase::ByteBuffer& )> CallbackReadType;
+  typedef std::function<void(std::shared_ptr<Connection>, libbase::ByteBuffer& )> CallbackReadType;
   typedef std::function<void(std::shared_ptr<Connection>)> CallbackInitType;
   typedef std::function<void()> CallbackCloseType;
 
@@ -40,7 +40,7 @@ class Connection: private glue_libbase::Noncopyable,
   void SetReadOperation(const CallbackReadType& cb);
   void SetCloseOperation(const CallbackCloseType& cb);
   void SetInitOperation(const CallbackInitType& cb);
-  void Send(glue_libbase::ByteBuffer& data);
+  void Send(libbase::ByteBuffer& data);
   void WriteCallback();
   void ReadCallback();
   void Close();
@@ -56,7 +56,7 @@ class Connection: private glue_libbase::Noncopyable,
     return sockfd_;
   }
  private:
-  void SendInLoopThread(glue_libbase::ByteBuffer data);
+  void SendInLoopThread(libbase::ByteBuffer data);
   void StopWrite();
   void StopRead();
   int sockfd_;
@@ -64,11 +64,11 @@ class Connection: private glue_libbase::Noncopyable,
   EventChannel channel_;
   /* state_ should be Atomic variable */
   std::atomic<int> state_;
-  glue_libbase::ByteBuffer send_buf_;
-  glue_libbase::ByteBuffer recv_buf_;
+  libbase::ByteBuffer send_buf_;
+  libbase::ByteBuffer recv_buf_;
   CallbackReadType read_cb_;
   CallbackCloseType close_cb_;
   CallbackInitType init_cb_;
 };
-} // namespace glue_network
+} // namespace network
 #endif // GLUE_NETWORK_CONNECTION_H_

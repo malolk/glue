@@ -1,8 +1,8 @@
 add_executable(event_process_time_test event_process_time_test.cc)
-target_link_libraries(event_process_time_test glue_network)
+target_link_libraries(event_process_time_test network)
 
 add_executable(throughput_client_test throughput_client_test.cc)
-target_link_libraries(throughput_client_test glue_network)
+target_link_libraries(throughput_client_test network)
 
 add_executable(throughput_server_test throughput_server_test.cc)
-target_link_libraries(throughput_server_test glue_network)
+target_link_libraries(throughput_server_test network)

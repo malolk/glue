@@ -10,7 +10,7 @@
 #include <pthread.h>
 #include <sys/time.h>
 
-namespace glue_libbase {
+namespace libbase {
 class CondVar: private Noncopyable {
  public:
   explicit CondVar(MutexLock& mutex_lock): mutex_lock_(mutex_lock) {

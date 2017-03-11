@@ -1,6 +1,6 @@
 #include "network/tcp_client.h"
 
-namespace glue_network {
+namespace network {
 void TcpClient::Start() {
   LOG_CHECK(!owned_, "");
   owned_ = true; /* Every client should be start in only once. */
@@ -67,4 +67,4 @@ void TcpClient::Close() {
 void TcpClient::DeleteInLoop(std::shared_ptr<Connection> conn_shared_ptr) {
   conn_shared_ptr->DestroyedInLoop(conn_shared_ptr);
 }
-} // namespace glue_network
+} // namespace network

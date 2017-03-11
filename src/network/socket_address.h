@@ -10,7 +10,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 
-namespace glue_network {
+namespace network {
 
 /* Copyable, default copy constructor and assignment operator is ok. */
 class SocketAddress {
@@ -129,6 +129,6 @@ class SocketAddress {
  private:
   AddrType addr_;		
 };
-}  // namespace glue_network
+}  // namespace network
 #endif // GLUE_NETWORK_SOCKETADDRESS_H_
 

@@ -6,7 +6,7 @@
 #include <signal.h>
 #include <string.h>
 
-namespace glue_network {
+namespace network {
 namespace { 
 class IgnoreSigpipe {
  public:
@@ -105,7 +105,7 @@ void Socket::GetSockName(int sockfd, SocketAddress& sa) {
 } 
 
 static const int BACKUP_BUF_SIZE = 65535;
-ssize_t Socket::Receive(int sockfd, glue_libbase::ByteBuffer& buf) {
+ssize_t Socket::Receive(int sockfd, libbase::ByteBuffer& buf) {
   char backup[BACKUP_BUF_SIZE];     
   const size_t buf_size = buf.WritableBytes();
   const size_t buf_readable = buf.ReadableBytes();
@@ -155,7 +155,7 @@ ssize_t Socket::Receive(int sockfd, glue_libbase::ByteBuffer& buf) {
   return recv_num;
 }
 
-ssize_t Socket::Send(int sockfd, glue_libbase::ByteBuffer& buf) {
+ssize_t Socket::Send(int sockfd, libbase::ByteBuffer& buf) {
   const size_t send_size = buf.ReadableBytes();
   ssize_t sent_num = ::write(sockfd, buf.AddrOfRead(), send_size);
   if (sent_num < 0)	{
@@ -249,7 +249,7 @@ void Socket::EnableNonBlock(int sockfd, int flag) {
   LOG_CHECK(ret >= 0, "");
 }
 
-} // namespace glue_network 
+} // namespace network 
 
 
 

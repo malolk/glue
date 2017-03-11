@@ -1,6 +1,6 @@
 #include "network/tcp_server.h"
 
-namespace glue_network {
+namespace network {
 
 void TcpServer::ReadListenSocket() {
   while (true) {
@@ -36,7 +36,7 @@ void TcpServer::Routine() {
   epoller.Initialize();
   eventloop_pool_.Start();
   {
-    glue_libbase::MutexLockGuard m(mu_);
+    libbase::MutexLockGuard m(mu_);
     EventLoop::epoll_ptr_ = &epoller;
     condvar_.NotifyOne();
   }
@@ -56,7 +56,7 @@ void TcpServer::StartInThread() {
   running_ = true;
   thread_.Schedule(std::bind(&TcpServer::Routine, this));
   {
-    glue_libbase::MutexLockGuard m(mu_);
+    libbase::MutexLockGuard m(mu_);
     while (EventLoop::epoll_ptr_ = NULL) {
       condvar_.Wait();
     }
@@ -68,4 +68,4 @@ void TcpServer::Shutdown() {
   EventLoop::Stop();  /* It's thread-safe here. */
   EventLoop::Join();
 }
-} // namespace glue_network
+} // namespace network

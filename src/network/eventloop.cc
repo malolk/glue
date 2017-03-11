@@ -1,11 +1,11 @@
 #include "network/eventloop.h"
 
-namespace glue_network {
+namespace network {
 void EventLoop::Routine() {
   Epoll epoller;
   epoller.Initialize();
   {
-    glue_libbase::MutexLockGuard m(mu_);
+    libbase::MutexLockGuard m(mu_);
 	epoll_ptr_ = &epoller;
 	condvar_.NotifyOne();
   }
@@ -18,7 +18,7 @@ Epoll* EventLoop::Start() {
   thread_.Start();
   thread_.Schedule(std::bind(&EventLoop::Routine, this));
   {
-    glue_libbase::MutexLockGuard m(mu_);
+    libbase::MutexLockGuard m(mu_);
 	while (epoll_ptr_ == NULL) {
 	  condvar_.Wait();
     }
@@ -64,4 +64,4 @@ void EventLoop::DeleteConnection(Connection* conn_ptr) {
 void EventLoop::DeleteConnectionInLoop(std::shared_ptr<Connection> conn_shared_ptr) {
   conn_shared_ptr->DestroyedInLoop(conn_shared_ptr); /* Delete channel from epoll. */
 }
-} // namespace glue_network
+} // namespace network

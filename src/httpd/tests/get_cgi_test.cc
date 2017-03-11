@@ -19,15 +19,15 @@ std::string FormOutput(std::string body) {
 }
 
 int main() {
-  glue_libbase::ByteBuffer buf;
+  libbase::ByteBuffer buf;
   buf.ReadFd(0);
-  std::vector<std::string> query_string = glue_httpd::SliceStrClearly(buf.ToString(), "=");
+  std::vector<std::string> query_string = httpd::SliceStrClearly(buf.ToString(), "=");
   buf.Reset();
   if (query_string.size() != 2) {
     buf.AppendString(FormOutput("Error input!"));
   } else {
     std::string num_str = query_string[1];
-    if (!glue_httpd::IsNumStr(num_str)) {
+    if (!httpd::IsNumStr(num_str)) {
       buf.AppendString(FormOutput(std::string("Error input: ") + num_str));
     } else {
       int num = std::stoi(num_str);

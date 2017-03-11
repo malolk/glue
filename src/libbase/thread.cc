@@ -3,26 +3,26 @@
 #include <assert.h>
 #include <stdio.h>
 
-namespace glue_libbase {
-namespace glue_libbase_thread {
+namespace libbase {
+namespace libbase_thread {
   __thread pid_t cached_tid = 0;
 
   pid_t GetTid() {
     return static_cast<pid_t>(::syscall(SYS_gettid));
   }
-} // namespace glue_libbase_thread
+} // namespace libbase_thread
 
 pid_t ThreadId() {
-  if (0 == glue_libbase_thread::cached_tid) {
-    glue_libbase_thread::cached_tid = glue_libbase_thread::GetTid();
+  if (0 == libbase_thread::cached_tid) {
+    libbase_thread::cached_tid = libbase_thread::GetTid();
   }
-  return glue_libbase_thread::cached_tid;
+  return libbase_thread::cached_tid;
 }
 
 namespace {
 // Fork safe.
 void AfterFork() {
-  glue_libbase_thread::cached_tid = 0;
+  libbase_thread::cached_tid = 0;
   ThreadId();
 }
 
@@ -121,5 +121,5 @@ void Thread::Run() {
   }
   running_ = false;
 }
-} // namespace glue_libbase
+} // namespace libbase
 

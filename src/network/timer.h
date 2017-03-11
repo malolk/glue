@@ -7,7 +7,7 @@
 
 #include <functional>
 
-namespace glue_network {
+namespace network {
 class Timer {
  public:
   typedef std::function<void()> CallbackTimeoutType;
@@ -21,7 +21,7 @@ class Timer {
     }
 	repeated_ = (interval_ == 0 ? false : true);
     if (repeated_) {
-      expiration_ = glue_libbase::TimeUtil::NowMicros() + interval_;
+      expiration_ = libbase::TimeUtil::NowMicros() + interval_;
     }
   }
 
@@ -34,7 +34,7 @@ class Timer {
   
   void Update() {
     LOG_CHECK(repeated_, "");
-    expiration_ = glue_libbase::TimeUtil::NowMicros() + interval_;
+    expiration_ = libbase::TimeUtil::NowMicros() + interval_;
   }
 	
   int64_t GetExpiration() const {
@@ -51,5 +51,5 @@ class Timer {
   bool repeated_;
   CallbackTimeoutType timeout_cb_;
 };
-} // namespace glue_network
+} // namespace network
 #endif // GLUE_NETWORK_TIMER_H_

@@ -8,13 +8,13 @@
 
 #include <pthread.h>
 
-namespace glue_network {
+namespace network {
 const size_t Epoll::default_event_num_ = 1024;
 
 void Epoll::Initialize() {
   epoll_fd_ = ::epoll_create1(EPOLL_CLOEXEC);
   LOG_CHECK(epoll_fd_ >= 0, "");
-  process_id_ = glue_libbase::ThreadId();
+  process_id_ = libbase::ThreadId();
   wakeup_fd_ = ::eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
   LOG_CHECK(wakeup_fd_ >= 0, "");
   
@@ -34,7 +34,7 @@ void Epoll::CancelTimer(TimerQueue::TimerIdType* id) {
 }
 
 void Epoll::MustInLoopThread() {
-  LOG_CHECK(process_id_ == glue_libbase::ThreadId(), "Not the thread where epoll created. ");
+  LOG_CHECK(process_id_ == libbase::ThreadId(), "Not the thread where epoll created. ");
 }
 
 void Epoll::Stop() {
@@ -48,7 +48,7 @@ void Epoll::StopInLoop() {
 }
 
 void Epoll::RunNowOrLater(const CallbackType& req) {   
-  if (process_id_ == glue_libbase::ThreadId()) {
+  if (process_id_ == libbase::ThreadId()) {
     req();
   } else {    
 	RunLater(req);
@@ -57,10 +57,10 @@ void Epoll::RunNowOrLater(const CallbackType& req) {
 
 void Epoll::RunLater(const CallbackType& req) {
   {
-	glue_libbase::MutexLockGuard m(mu_);
+	libbase::MutexLockGuard m(mu_);
 	pending_requests_.push_back(req);    
   }
-  if (process_id_ != glue_libbase::ThreadId() || 
+  if (process_id_ != libbase::ThreadId() || 
       is_handling_events_) {
     Wakeup();
   }
@@ -166,7 +166,7 @@ void Epoll::HandleEventsImpl(EventChannel* chann_ptr, uint32_t ret_fields) {
 void Epoll::HandleRequests() {
   std::vector<CallbackType> req_buf;
   {
-    glue_libbase::MutexLockGuard m(mu_);
+    libbase::MutexLockGuard m(mu_);
 	std::swap(req_buf, pending_requests_);
   }
   
@@ -216,4 +216,4 @@ void Epoll::WriteWakeupChannel() {
   // Nothing.   
 }
 
-} // namespace glue_network
+} // namespace network

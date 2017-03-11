@@ -1,6 +1,6 @@
 #include "network/connection.h"
 
-namespace glue_network {
+namespace network {
 void Connection::Initialize() {
   channel_.Initialize(std::bind(&Connection::ReadCallback, this),
                       std::bind(&Connection::WriteCallback, this),
@@ -36,13 +36,13 @@ void Connection::SetCloseOperation(const CallbackCloseType& cb) {
   }
 }
 
-void Connection::Send(glue_libbase::ByteBuffer& data) {
+void Connection::Send(libbase::ByteBuffer& data) {
   /* I/O operation in loop thread is thread-safe. */
   epoll_ptr_->RunNowOrLater(std::bind(&Connection::SendInLoopThread,
                           this, data));
 }
 
-void Connection::SendInLoopThread(glue_libbase::ByteBuffer data) {
+void Connection::SendInLoopThread(libbase::ByteBuffer data) {
   ssize_t sent_num = 0;
   const size_t send_size = data.ReadableBytes();
   if (send_buf_.ReadableBytes() == 0) {
@@ -165,4 +165,4 @@ void Connection::StopWrite() {
     channel_.DisableWR();
   }
 }
-} // namespace glue_network
+} // namespace network

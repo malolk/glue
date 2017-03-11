@@ -1,6 +1,6 @@
 #include "httpd/stringutil.h"
 
-namespace glue_httpd {
+namespace httpd {
 std::vector<std::string> SliceStr(const std::string& str, const std::string& target) {
   std::string::size_type pos = 0, rt_pos = 0;
   std::vector<std::string> segments;
@@ -60,4 +60,4 @@ bool IsNumStr(const std::string& num_str) {
   }
   return true;
 }
-} // namespace glue_httpd
+} // namespace httpd

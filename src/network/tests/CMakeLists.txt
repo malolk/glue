@@ -1,35 +1,35 @@
 add_executable(epoll_test epoll_test.cc)
-target_link_libraries(epoll_test glue_network)
+target_link_libraries(epoll_test network)
 
 add_executable(socket_address_test socket_address_test.cc)
-target_link_libraries(socket_address_test glue_network)
+target_link_libraries(socket_address_test network)
 
 add_executable(socket_client_test socket_client_test.cc)
-target_link_libraries(socket_client_test glue_network)
+target_link_libraries(socket_client_test network)
 
 add_executable(socket_server_test socket_server_test.cc)
-target_link_libraries(socket_server_test glue_network)
+target_link_libraries(socket_server_test network)
 
 add_executable(tcp_server_test tcp_server_test.cc)
-target_link_libraries(tcp_server_test glue_network)
+target_link_libraries(tcp_server_test network)
 
 add_executable(tcp_server_test1 tcp_server_test1.cc)
-target_link_libraries(tcp_server_test1 glue_network)
+target_link_libraries(tcp_server_test1 network)
 
 add_executable(timer_queue_test timer_queue_test.cc)
-target_link_libraries(timer_queue_test glue_network)
+target_link_libraries(timer_queue_test network)
 
 add_executable(tcp_client_test tcp_client_test.cc)
-target_link_libraries(tcp_client_test glue_network)
+target_link_libraries(tcp_client_test network)
 
 add_executable(acceptor_test acceptor_test.cc)
-target_link_libraries(acceptor_test glue_network)
+target_link_libraries(acceptor_test network)
 
 add_executable(connector_test connector_test.cc)
-target_link_libraries(connector_test glue_network)
+target_link_libraries(connector_test network)
 
 add_executable(eventloop_test eventloop_test.cc)
-target_link_libraries(eventloop_test glue_network)
+target_link_libraries(eventloop_test network)
 
 add_executable(eventloop_pool_test eventloop_pool_test.cc)
-target_link_libraries(eventloop_pool_test glue_network)
+target_link_libraries(eventloop_pool_test network)

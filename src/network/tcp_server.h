@@ -22,7 +22,7 @@
 
 #include <unistd.h>
 
-namespace glue_network {
+namespace network {
 class TcpServer: public EventLoop {
  public:
   explicit TcpServer(const SocketAddress& server_addr, 
@@ -58,12 +58,12 @@ class TcpServer: public EventLoop {
   int dispatch_counter_;
   const int pool_size_;
   std::atomic<bool> running_;
-  glue_libbase::MutexLock mu_;
-  glue_libbase::CondVar condvar_; /* For synchronously exiting. */
+  libbase::MutexLock mu_;
+  libbase::CondVar condvar_; /* For synchronously exiting. */
   Connection::CallbackReadType read_cb_;
   SocketAddress server_addr_;
   Acceptor acceptor_;
   EventLoopPool eventloop_pool_;
 };
-} // namespace glue_network
+} // namespace network
 #endif // GLUE_NETWORK_TCPSERVER_H_

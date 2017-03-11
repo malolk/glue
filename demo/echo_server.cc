@@ -10,7 +10,7 @@
 #include <unistd.h>  // for getopt
 #include <stdlib.h>  // for atoi
 
-using namespace glue_network;
+using namespace network;
 
 // your read-callback
 void ReadCallback(std::shared_ptr<Connection>& conn, ByteBuffer& buf) {

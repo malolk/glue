@@ -10,12 +10,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-namespace glue_libbase {
+namespace libbase {
 /* Copable, default copy constructor, assignment operator and destructor is ok */
 class ByteBuffer {
  public:
   explicit ByteBuffer(size_t capacity = default_capacity_)
-    : buf_id_(glue_libbase::ThreadId()), read_pos_(0), write_pos_(0) {
+    : buf_id_(libbase::ThreadId()), read_pos_(0), write_pos_(0) {
     assert(capacity > 0);
     buf_.resize(capacity, 0);
   }
@@ -101,5 +101,5 @@ class ByteBuffer {
   size_t write_pos_;
   static const size_t default_capacity_;
 };
-} // namespace glue_libbase
+} // namespace libbase
 #endif // GLUE_NETWORK_BYTEBUFFER_H_

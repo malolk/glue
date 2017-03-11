@@ -1,6 +1,6 @@
 #include "network/eventloop_pool.h"
 
-namespace glue_network {
+namespace network {
 EventLoop* EventLoopPool::NextEventLoop() {
   LOG_CHECK(pool_size_ >= 1, "pool is empty");
   EventLoop* ret = pool_[dispatch_id_++].get();
@@ -27,4 +27,4 @@ void EventLoopPool::Shutdown() {
 	pool_[index]->Join();
   }	
 }
-} // namespace glue_network
+} // namespace network

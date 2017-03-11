@@ -16,7 +16,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-namespace glue_network {
+namespace network {
 class Socket {
  public:
   enum {
@@ -27,8 +27,8 @@ class Socket {
   static void StopWrite(int sockfd); 
   static void StopRead(int sockfd);
 
-  static ssize_t Send(int sockfd, glue_libbase::ByteBuffer& buf);
-  static ssize_t Receive(int sockfd, glue_libbase::ByteBuffer& buf);
+  static ssize_t Send(int sockfd, libbase::ByteBuffer& buf);
+  static ssize_t Receive(int sockfd, libbase::ByteBuffer& buf);
 
   static void GetPeerName(int sockfd, SocketAddress &sa);
   static void GetSockName(int sockfd, SocketAddress &sa);
@@ -46,5 +46,5 @@ class Socket {
   static void EnableTcpNoDelay(int sockfd, int flag);
   static void EnableNonBlock(int sockfd, int flag);
 };
-} // namespace glue_network
+} // namespace network
 #endif // GLUE_NETWORK_SOCKET_H_

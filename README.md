@@ -73,7 +73,7 @@ Note: Build type is release when not specified
 - executable files
 
 ```
-The executable files of tests for the library could be found in directory source_dir/bin
+The executable files of tests for the library could be found in directory build/bin
 ```
 
 ## Demo

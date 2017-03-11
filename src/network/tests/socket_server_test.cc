@@ -4,7 +4,7 @@
 #include <string>
 
 void TestIpv4() {
-  using namespace glue_network;
+  using namespace network;
   int fd = Socket::NewSocket();
   Socket::EnableNonBlock(fd, 0);
   Socket::EnableAddrReuse(fd, 1);
@@ -19,7 +19,7 @@ void TestIpv4() {
     Socket::EnableNonBlock(cli_fd, 0); // Blocking I/O
     if (cli_fd >= 0) {
       LOG_INFO("Receive Connect from client: %s ", client_addr.ToString().c_str());
-      glue_libbase::ByteBuffer buf;
+      libbase::ByteBuffer buf;
       while (true) {
         ssize_t read_num = Socket::Receive(cli_fd, buf);  
         if (read_num == 0) {
@@ -41,7 +41,7 @@ void TestIpv4() {
 }
 
 void TestIpv6() {
-  using namespace glue_network;
+  using namespace network;
   int fd = Socket::NewSocket(AF_INET6, SOCK_STREAM, 0);
   Socket::EnableNonBlock(fd, 0);
   Socket::EnableAddrReuse(fd, 1);
@@ -56,7 +56,7 @@ void TestIpv6() {
     Socket::EnableNonBlock(cli_fd, 0); // Blocking I/O
     if (cli_fd >= 0) {
       LOG_INFO("Receive Connect from client: %s ", client_addr.ToString().c_str());
-      glue_libbase::ByteBuffer buf;
+      libbase::ByteBuffer buf;
       while (true) {
         ssize_t read_num = Socket::Receive(cli_fd, buf);  
         if (read_num == 0) {

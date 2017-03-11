@@ -16,8 +16,8 @@
 #include <unordered_map>
 #include <functional>
 
-namespace glue_network {
-class EventLoop: private glue_libbase::Noncopyable {
+namespace network {
+class EventLoop: private libbase::Noncopyable {
  public:
   EventLoop() : running_(false), epoll_ptr_(NULL), 
                 thread_(), mu_(), condvar_(mu_) {
@@ -59,12 +59,12 @@ class EventLoop: private glue_libbase::Noncopyable {
   void Routine();
   std::atomic<bool> running_;
   Epoll* epoll_ptr_;
-  glue_libbase::Thread thread_;
-  glue_libbase::MutexLock mu_;
-  glue_libbase::CondVar condvar_;
+  libbase::Thread thread_;
+  libbase::MutexLock mu_;
+  libbase::CondVar condvar_;
   /* Here, every eventloop contains its own connection pool. */
   typedef std::unordered_map<Connection*, std::shared_ptr<Connection>> ConnectionPoolType;
   ConnectionPoolType conn_pool_;
 };
-} // namespace glue_network
+} // namespace network
 #endif // GLUE_NETWORK_EVENTLOOP_H_

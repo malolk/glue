@@ -1,6 +1,6 @@
 #include "httpd/http_response.h"
 
-namespace glue_httpd {
+namespace httpd {
 namespace {
 const std::map<std::string, std::string>
 code_msg = {
@@ -150,4 +150,4 @@ void HttpResponse::Send(Buf& buf, const std::string& file_type) {
   conn_->Send(header_buf);
   conn_->Send(buf);
 }
-} // namespace glue_httpd
+} // namespace httpd

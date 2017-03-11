@@ -6,8 +6,8 @@
 #include "libbase/noncopyable.h"
 #include "libbase/loggerutil.h"
 
-namespace glue_network {
-class Connector : private glue_libbase::Noncopyable {
+namespace network {
+class Connector : private libbase::Noncopyable {
  public: 
   /* Get fully connected socket. */
   static int GetConnectedSocket(int max_runs, const SocketAddress& server_addr, int non_block = 1) {
@@ -55,6 +55,6 @@ class Connector : private glue_libbase::Noncopyable {
   bool non_block_;
   const SocketAddress& server_addr_;
 };
-} // namespace glue_network
+} // namespace network
 #endif // GLUE_NETWORK_CONNECTOR_H_
 

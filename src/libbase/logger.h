@@ -15,7 +15,7 @@
 #include <atomic>
 
 /* A thread-safe implementation of logger in Singleton pattern. */
-namespace glue_libbase {
+namespace libbase {
 class Logger {
  public: 
   enum LevelType {
@@ -91,6 +91,6 @@ class Logger {
   static Logger* logger_;
   static Helper helper_;
 };
-}  // namespace glue_libbase
+}  // namespace libbase
 
 #endif // GLUE_LIBBASE_LOGGER_H_

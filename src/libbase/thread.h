@@ -15,7 +15,7 @@
 #include <functional>
 #include <atomic>
 
-namespace glue_libbase {
+namespace libbase {
 
 /* Get pid of current thread. */
 pid_t ThreadId();
@@ -59,5 +59,5 @@ class Thread: private Noncopyable {
   CondVar condvar_;
   BlockingQueue<FuncType> bqueue_;
 };
-} // namespace glue_libbase
+} // namespace libbase
 #endif  // GLUE_LIBBASE_THREAD_H_

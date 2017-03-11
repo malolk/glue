@@ -10,8 +10,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-using namespace glue_network;
-using namespace glue_libbase;
+using namespace network;
+using namespace libbase;
 
 void pingpong(std::shared_ptr<Connection> conn, ByteBuffer& buf) {
   conn->Send(buf);

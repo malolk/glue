@@ -12,8 +12,8 @@
 #include <fcntl.h>
 #include <stdlib.h>
 
-namespace glue_network {
-class Acceptor : private glue_libbase::Noncopyable {
+namespace network {
+class Acceptor : private libbase::Noncopyable {
  public:
   /* default setting is non-blocking I/O. */
   explicit Acceptor(const SocketAddress& server_addr, int non_block = 1) 
@@ -31,7 +31,7 @@ class Acceptor : private glue_libbase::Noncopyable {
 
     /* Could use more flexible settings fot backlog? */
     int somaxconn_fd = ::open("/proc/sys/net/core/somaxconn", O_RDONLY);
-    glue_libbase::ByteBuffer file_buf;
+    libbase::ByteBuffer file_buf;
     file_buf.ReadFd(somaxconn_fd);
     int64_t somaxconn = atoll(file_buf.ToString().c_str());
     LOG_CHECK(somaxconn > 0, "");
@@ -65,5 +65,5 @@ class Acceptor : private glue_libbase::Noncopyable {
   int listen_fd_;
   SocketAddress server_addr_;
 };
-} // namespace glue_network
+} // namespace network
 #endif // GLUE_NETWORK_ACCEPTOR_H_

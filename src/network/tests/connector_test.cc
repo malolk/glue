@@ -7,14 +7,14 @@
 #include <unistd.h>
 
 void TestCase(const char* ip_str, uint16_t port, bool is_ipv6 = 0) {
-  using namespace glue_network;
+  using namespace network;
   SocketAddress server_addr(ip_str, port, is_ipv6);
   /* Blocking I/O. */ 
   int fd = Connector::GetConnectedSocket(10, server_addr, 0); 
   SocketAddress client_addr;
   Socket::GetSockName(fd, client_addr);
 
-  glue_libbase::ByteBuffer buf;
+  libbase::ByteBuffer buf;
   int cnt = 2;
   while (cnt-- > 0)	{
 	buf.AppendString(client_addr.ToString());

@@ -21,7 +21,7 @@ int main() {
   int size = 0;
   const std::string const_str = "1234567890";
 
-  glue_libbase::ByteBuffer buf;
+  libbase::ByteBuffer buf;
   LOG_CHECK(static_cast<int>(buf.ReadableBytes()) == 0, "intiate readable size is non-zero");
   LOG_CHECK(buf.WritableBytes() > 0, "intiate writable size is not BUF_INIT_CAPACITY");
 	
@@ -41,7 +41,7 @@ int main() {
   LOG_CHECK(static_cast<int>(buf.ReadableBytes()) == size, "Buffer AppendString error");
   LOG_INFO("Buf content: %s AppendString() [PASS]", buf.ToString().c_str());
 
-  glue_libbase::ByteBuffer buf2;
+  libbase::ByteBuffer buf2;
   buf2.Append(str3, size3);
   LOG_INFO("Buf2 content: %s ", buf2.ToString().c_str());
   

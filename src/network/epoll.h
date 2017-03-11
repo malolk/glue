@@ -24,8 +24,8 @@
 #include <errno.h>
 
 /* TODO: add timer_queue. */
-namespace glue_network {
-class Epoll: private glue_libbase::Noncopyable {
+namespace network {
+class Epoll: private libbase::Noncopyable {
  public:
   typedef std::function<void()> CallbackType;
   Epoll()
@@ -76,9 +76,9 @@ class Epoll: private glue_libbase::Noncopyable {
   std::vector<struct epoll_event> events_; 
   std::vector<CallbackType> pending_requests_; 
   std::unordered_set<EventChannel*> channels_;
-  glue_libbase::MutexLock mu_;
+  libbase::MutexLock mu_;
   TimerQueue timer_queue_;
   static const size_t default_event_num_;
 };	
-} // namespace glue_network
+} // namespace network
 #endif // GLUE_NETWORK_EPOLL_H_

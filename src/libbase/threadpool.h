@@ -13,7 +13,7 @@
 #include <vector>
 #include <atomic>
 
-namespace glue_libbase {
+namespace libbase {
 class ThreadPool: private Noncopyable {
  public:
   enum RunningState {
@@ -48,5 +48,5 @@ class ThreadPool: private Noncopyable {
   BoundedBlockingQueue<TaskType> queue_;
 };
 
-}  // namespace glue_libbase 
+}  // namespace libbase 
 #endif //GLUE_LIBBASE_THREADPOOL_H_

@@ -1,5 +1,5 @@
-#include "../heap.h"
-#include "../logger.h"
+#include "libbase/heap.h"
+#include "libbase/logger.h"
 
 #include <string.h>
 #include <iostream>
@@ -11,7 +11,7 @@ bool CompFunc(const int& lhs, const int& rhs) {
   return lhs < rhs;
 }
 
-typedef std::weak_ptr<glue_libbase::Element<int>> IntIdType;
+typedef std::weak_ptr<libbase::Element<int>> IntIdType;
 
 void Print(const std::vector<int> vec) {
   std::string ret;
@@ -23,7 +23,7 @@ void Print(const std::vector<int> vec) {
 
 void TestCase(int ary_num, const std::vector<int>& vec) {
   std::vector<int> sorted_vec;
-  glue_libbase::Heap<int> heap(ary_num, CompFunc);
+  libbase::Heap<int> heap(ary_num, CompFunc);
   Print(vec);
   std::vector<IntIdType> id_vec;
   for (auto elem : vec) {

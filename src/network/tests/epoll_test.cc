@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <functional>
 
-typedef glue_network::Connection Connection;
+typedef network::Connection Connection;
 typedef std::shared_ptr<Connection> ConnectionType;
 typedef std::unordered_map<Connection*, ConnectionType> ConnectionPoolType;
 
@@ -21,7 +21,7 @@ void DeleteConnectionInLoop(ConnectionType conn_ptr) {
 /* When connection is closing, it will be invoked. 
  * Note: we can't pass the shared_ptr of connection to this callback, otherwise, 
  * it won't be destroyed since it exits in the connection itself. */
-void CloseConnection(glue_network::Epoll* epoll_ptr, ConnectionPoolType& conn_pool, Connection* conn) {
+void CloseConnection(network::Epoll* epoll_ptr, ConnectionPoolType& conn_pool, Connection* conn) {
   ConnectionPoolType::iterator it = conn_pool.find(conn);
   LOG_CHECK(it != conn_pool.end(), "");
   ConnectionType conn_backup = it->second;
@@ -34,24 +34,24 @@ void CloseConnection(glue_network::Epoll* epoll_ptr, ConnectionPoolType& conn_po
 
 /* Data processing logic should be put here. */ 
 void ReadConnection(ConnectionType conn_ptr, 
-                    glue_libbase::ByteBuffer& recv_buf) {
+                    libbase::ByteBuffer& recv_buf) {
   conn_ptr->Send(recv_buf);  
 }
 
-void ReadListenSocket(glue_network::Epoll* epoll_ptr, 
-                      glue_network::Acceptor* acceptor,
+void ReadListenSocket(network::Epoll* epoll_ptr, 
+                      network::Acceptor* acceptor,
                       ConnectionPoolType& conn_pool) {
-  glue_network::SocketAddress conn_addr;
+  network::SocketAddress conn_addr;
   while (true) {
     int ret = acceptor->Accept();
 	if (ret >= 0) {
-      ConnectionType conn_ptr(new glue_network::Connection(ret, epoll_ptr));
+      ConnectionType conn_ptr(new network::Connection(ret, epoll_ptr));
 	  conn_pool[conn_ptr.get()] = conn_ptr;
       conn_ptr->SetReadOperation(ReadConnection);
       conn_ptr->SetCloseOperation(std::bind(&CloseConnection, epoll_ptr, std::ref(conn_pool), conn_ptr.get()));
       conn_ptr->Initialize();
     } else {
-      if (ret == glue_network::Socket::kRETRY) {
+      if (ret == network::Socket::kRETRY) {
         /* Already accept all the connection. */
 	    break;
       } else {
@@ -72,12 +72,12 @@ void CloseListenSocket() {
 }
 
 void RunSingleThreadEpollServer() {
-  glue_network::Epoll epoller;
+  network::Epoll epoller;
   epoller.Initialize();
   ConnectionPoolType conn_pool;
-  glue_network::SocketAddress server_addr; /* Default server address: 127.0.0.1:8080. */
-  glue_network::Acceptor acceptor(server_addr); /* Make listen socket non-blocking. */
-  glue_network::EventChannel acceptor_chann(&epoller, acceptor.Fd());
+  network::SocketAddress server_addr; /* Default server address: 127.0.0.1:8080. */
+  network::Acceptor acceptor(server_addr); /* Make listen socket non-blocking. */
+  network::EventChannel acceptor_chann(&epoller, acceptor.Fd());
   acceptor_chann.Initialize(std::bind(ReadListenSocket, &epoller, &acceptor, std::ref(conn_pool)), 
                             WriteListenSocket, CloseListenSocket);
   acceptor_chann.AddIntoLoopWithRead();
