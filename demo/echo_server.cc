@@ -1,7 +1,7 @@
 #include "network/tcp_server.h"
 #include "network/socket_address.h"
 #include "network/connection.h"
-#include "network/buffer.h"
+#include "libbase/buffer.h"
 
 #include <iostream>
 #include <string>
@@ -11,9 +11,10 @@
 #include <stdlib.h>  // for atoi
 
 using namespace network;
+using namespace libbase;
 
 // your read-callback
-void ReadCallback(std::shared_ptr<Connection>& conn, ByteBuffer& buf) {
+void ReadCallback(std::shared_ptr<Connection> conn, ByteBuffer& buf) {
   // echo the data back
   conn->Send(buf);  
   std::cout << buf.ReadableBytes() << std::endl;

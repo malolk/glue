@@ -1,12 +1,15 @@
 #include "network/tcp_client.h"
+#include "network/epoll.h"
+#include "libbase/buffer.h"
 
+#include <memory>
 #include <iostream>
 #include <string>
 
 using namespace network;
 using namespace libbase;
 
-void ReadCallback(std::shared_ptr<SocketConnection::Connection> conn, ByteBuffer& buf) {
+void ReadCallback(std::shared_ptr<network::Connection> conn, ByteBuffer& buf) {
   std::cout << buf.ToString() << std::endl;
   buf.Reset();
   std::string data;
@@ -16,7 +19,7 @@ void ReadCallback(std::shared_ptr<SocketConnection::Connection> conn, ByteBuffer
   std::cout << buf.ReadableBytes() << std::endl;  
 }
 
-void InitCallback(std::shared_ptr<SocketConnection::Connection> conn) {
+void InitCallback(std::shared_ptr<network::Connection> conn) {
   std::string data;
   std::cin >> data;
   ByteBuffer tmp;
