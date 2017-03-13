@@ -6,6 +6,12 @@
 #include "libbase/noncopyable.h"
 #include "libbase/loggerutil.h"
 
+#include <sys/select.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <errno.h>
+
 namespace network {
 class Connector : private libbase::Noncopyable {
  public: 
@@ -49,6 +55,32 @@ class Connector : private libbase::Noncopyable {
     /* failed, so close the sockfd_. */
     Socket::Close(sockfd_);
     return -1;
+  }
+
+  int ConnectWithTimeout(int secs) {
+    LOG_CHECK(secs > 0 && non_block_, "");
+    struct timeval timeout = {secs, 0};
+    fd_set fdset;
+    FD_ZERO(&fdset);
+    FD_SET(sockfd_, &fdset);
+    int n = select(sockfd_, &fdset, &fdset, NULL, &timeout);
+    switch (n) {
+        case 0: 
+          return Socket::kTIMEOUT;
+        case -1: {
+          LOG_ERROR("Error occured when connect.");
+          return Socket::kTIMEOUT;
+        }
+        default: {
+          int so_error = 0;
+          unsigned so_len = sizeof(so_error);
+          getsockopt(sockfd_, SOL_SOCKET, SO_ERROR, &so_error, &so_len);
+          if (so_error == 0) return 0;
+          errno = so_error;
+          LOG_ERROR("Wait failed when connect.");
+          return Socket::kTIMEOUT;
+        } 
+    }
   }
 
   int sockfd_;

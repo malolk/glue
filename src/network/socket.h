@@ -23,7 +23,9 @@ class Socket {
     kERROR = -1,
     kNODATA = -2,
     kRETRY = -3,
+    kTIMEOUT = -4
   };
+
   static void StopWrite(int sockfd); 
   static void StopRead(int sockfd);
 
