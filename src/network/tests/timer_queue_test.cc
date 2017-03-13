@@ -13,8 +13,8 @@ void NonRepeated() {
 }
 
 int main() {
-  network::Timer timer_oneshot(NonRepeated, 5); /* After 5 seconds. */
-  network::Timer timer_repeated(Repeated, 0, 2); /* Every 2 seconds. */
+  network::Timer timer_oneshot(NonRepeated, libbase::TimeUtil::NowMicros() + 5000000LL); /* After 5 seconds. */
+  network::Timer timer_repeated(Repeated, 0, 2000000LL); /* Every 2 seconds. */
   network::EventLoop eventloop;
   eventloop.Start();
   network::Epoll* epoll_ptr = eventloop.EpollPtr();

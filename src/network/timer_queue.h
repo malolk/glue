@@ -6,7 +6,6 @@
 #include "libbase/heap.h"
 #include "libbase/noncopyable.h"
 #include "libbase/timeutil.h"
-#include "libbase/loggerutil.h"
 
 #include <utility>
 #include <memory>
@@ -35,10 +34,6 @@ class TimerQueue: private libbase::Noncopyable {
    * id would be tied to the timer when id was not NULL. */
   void AddTimer(TimerIdType* id, const Timer& timer);
   void DelTimer(TimerIdType* id);
-  static bool IsTimerExpired(TimerIdType* id) {
-    LOG_CHECK(id != NULL, "");
-    return id->expired();
-  }
 
  private:
   void AddTimerInLoop(TimerIdType* id, const Timer& timer);
