@@ -3,18 +3,9 @@
 namespace network {
 void TcpClient::Start() {
   LOG_CHECK(!owned_, "");
-  owned_ = true; /* Every client should be start in only once. */
-  is_in_current_thread_ = true;
-  sockfd_ = Connector::GetConnectedSocket(max_runs_, server_addr_, 1);
-  LOG_CHECK(sockfd_ >= 0, "connect failed");
   Epoll epoller;
   epoller.Initialize();
-  epoll_ptr_ = &epoller;
-  conn_ = std::shared_ptr<Connection>(new Connection(sockfd_, &epoller));
-  conn_->SetReadOperation(read_cb_);
-  conn_->SetInitOperation(init_cb_);
-  conn_->SetCloseOperation(std::bind(&TcpClient::Close, this));
-  conn_->Initialize();
+  Start(&epoller);
   epoller.Run();
 }
 
