@@ -1,37 +1,42 @@
 #include "network/timer_queue.h"
 #include "network/epoll.h"
 #include "libbase/loggerutil.h"
+#include "libbase/timeutil.h"
 
 #include <string.h>
 
 namespace network {
 const int TimerQueue::max_num_one_shot_ = 1000;
 bool CompareTimer(const Timer& lhs, const Timer& rhs) {
-  return (lhs.GetExpiration() < rhs.GetExpiration());
+  return libbase::TimeUtil::CompareTimeval(lhs.GetExpiration(), 
+                                           rhs.GetExpiration()) < 0;
 }
 
 namespace {
-void SetTimerFd(int fd, int64_t expiration) {
+void SetTimerFd(int fd, struct timeval* diff) {
   LOG_CHECK(fd >= 0, "");
   struct itimerspec new_val;
   bzero(&new_val, sizeof(new_val));
-  new_val.it_value.tv_sec = expiration / 1000000LL;
-  new_val.it_value.tv_nsec = (expiration - new_val.it_value.tv_sec * 1000000LL) * 1000L;
+  if (diff) {
+    new_val.it_value.tv_sec = diff->tv_sec;
+    new_val.it_value.tv_nsec = diff->tv_usec * 1000L;
+  }
   int ret = timerfd_settime(fd, 0, &new_val, NULL);
   LOG_CHECK(ret == 0, "");
 }
 
-void StartTimerFd(int fd, int64_t when) {
-  /* Here, use the time difference relative to current time to setting timerfd. */
-  int64_t diff = when - libbase::TimeUtil::NowMicros();
-  if (diff < 0)  {
-    diff = 0;
+void StartTimerFd(int fd, const struct timeval& when) {
+  struct timeval diff = libbase::TimeUtil::DiffTimeval(when, 
+                        libbase::TimeUtil::NowTimeval());
+  if (diff.tv_sec < 0) {
+    diff.tv_sec = 0;
+    diff.tv_usec = 1000;
   }
-  SetTimerFd(fd, diff);
-}
+  SetTimerFd(fd, &diff);
+} 
 
 void StopTimerFd(int fd) {
-  SetTimerFd(fd, 0);
+  SetTimerFd(fd, NULL);
 }
 
 void CallbackWrite() {
@@ -88,9 +93,10 @@ void TimerQueue::ReadTimerChannel() {
   LOG_CHECK(ret == static_cast<ssize_t>(sizeof(uint64_t)), "timerfd read error");
   
   int timeout_num = 0;
-  int64_t now_time = libbase::TimeUtil::NowMicros();
+  struct timeval now_time = libbase::TimeUtil::NowTimeval();
   while (!timer_pool_.Empty() && timeout_num < max_num_one_shot_) {
-    if (timer_pool_.Top().GetExpiration() <= now_time) {
+    if (libbase::TimeUtil::CompareTimeval(timer_pool_.Top().GetExpiration(), 
+                                          now_time) <= 0) {
       timer_pool_.Top().Timeout();
       if (timer_pool_.Top().IsRepeated()) {
         /* Reinsert the top element to the heap. */

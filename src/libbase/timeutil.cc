@@ -32,32 +32,22 @@ int TimeUtil::ToStringOfMicros(char* buf, int len, int flag) {
   }
 }
 
-std::string TimeUtil::ToStringOfMicros(int64_t micro_sec) {
+std::string TimeUtil::NowTime() {
   char buf[128] = {'\0'}; /* It's enough to store the time string */
   ToStringOfMicros(buf, sizeof(buf), 1);
   return std::string(buf, strlen(buf));
 }
 
-std::string TimeUtil::ToStringOfSeconds(int64_t micro_sec) {
+std::string TimeUtil::NowTimeSeconds() {
   char buf[128] = {'\0'};
   ToStringOfMicros(buf, sizeof(buf), 0);
   return std::string(buf, strlen(buf)); 
-}
-
-std::string TimeUtil::NowTime() {
-    return ToStringOfMicros(NowMicros());
 }
 
 struct timeval TimeUtil::NowTimeval() {
   struct timeval tv;
   gettimeofday(&tv, NULL);
   return tv; 
-}
-
-int64_t TimeUtil::NowMicros() {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  return (tv.tv_sec * 1000000LL + tv.tv_usec);
 }
 
 int64_t TimeUtil::NowSeconds() {
@@ -75,15 +65,49 @@ int TimeUtil::NowDay() {
   return time_store->tm_yday;
 }
 
-void TimeUtil::StartTime(int64_t& start_micros) {
-  start_micros = NowMicros();
+int64_t TimeUtil::ElapsedSeconds(const struct timeval& start) {
+  return NowSeconds() - start.tv_sec;
 }
 
-int64_t TimeUtil::ElapsedMicros(const int64_t& start_micros) {
-  return (NowMicros() - start_micros);
+int64_t TimeUtil::ElapsedMicros(const struct timeval& start) {
+  struct timeval diff = DiffTimeval(start, NowTimeval());
+  return diff.tv_sec * 1000000 + diff.tv_usec;
 }
 
-int64_t TimeUtil::ElapsedSeconds(const int64_t& start_micros) {
-  return (NowMicros() - start_micros) / 1000000LL;
+void TimeUtil::AddMicros(struct timeval& t, int64_t micros) {
+  int64_t m = t.tv_usec + micros;
+  t.tv_sec += m / 1000000;
+  t.tv_usec = m % 1000000;
 }
+
+void TimeUtil::AddSeconds(struct timeval& t, int64_t secs) { 
+  t.tv_sec += secs;
+}
+
+struct timeval TimeUtil::DiffTimeval(const struct timeval& lhs, 
+                                     const struct timeval& rhs) { 
+  time_t diff_seconds = lhs.tv_sec - rhs.tv_sec;
+  long diff_usecs = lhs.tv_usec - rhs.tv_usec;
+  if (diff_usecs < 0) {
+    diff_usecs += 1000000;
+    diff_seconds -= 1;
+  }
+  struct timeval diff = {diff_seconds, diff_usecs};
+  return diff;
+}
+
+int TimeUtil::CompareTimeval(const struct timeval& lhs, 
+                              const struct timeval& rhs) {
+  if (lhs.tv_sec < rhs.tv_sec) {
+    return -1;
+  } else if (lhs.tv_sec > rhs.tv_sec) {
+    return 1;
+  } else if (lhs.tv_usec < rhs.tv_usec) {
+    return -1;
+  } else if (lhs.tv_usec > rhs.tv_usec) {
+    return 1;
+  }
+  return 0;
+}
+
 } // namespace libbase

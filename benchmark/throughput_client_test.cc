@@ -95,7 +95,7 @@ class ClientCluster : private Noncopyable {
       eventloop_pool_.Start();
     }
    
-    network::Timer timer(std::bind(&ClientCluster::Timeout, this), libbase::TimeUtil::NowMicros() + time_range_ * 1000000LL);
+    network::Timer timer(std::bind(&ClientCluster::Timeout, this), time_range_);
     epoller.RunTimer(NULL, timer);
     
     for (int index = 0; index < client_num_; ++index) {

@@ -59,12 +59,13 @@ void RunOnce() {
   recv_cnt = 0;
   writes = num_writes;
 
-  int64_t start = libbase::TimeUtil::NowMicros();
+  int64_t elapsed;
+  {
+    libbase::TimeCounter counter(&elapsed);
+    epoll_ptr->Run();
+  }
 
-  epoll_ptr->Run();
-
-  int64_t span = libbase::TimeUtil::ElapsedMicros(start);
-  std::cout << span << " us" << std::endl; 
+  std::cout << elapsed << " us" << std::endl; 
 }
 
 int main(int argc, char* argv[]) {

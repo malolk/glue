@@ -17,22 +17,24 @@ class Timer {
   };
 
   typedef std::function<void()> CallbackTimeoutType;
-  Timer(): expiration_(0), interval_(0), timeout_cb_() {
+  Timer(): expiration_(libbase::TimeUtil::NowTimeval()), 
+           interval_(0), timeout_cb_() {
   }
-  /* when interval == 0, the timer will just timeout once at most. Otherwise, the next timeout time 
-   * will be the sum of current time and the interval. */
-  Timer(const CallbackTimeoutType& timeout_cb, int64_t expiration, int64_t interval = 0, int64_t grid = kSECOND)
-    : expiration_(0), interval_(0), timeout_cb_(timeout_cb) {
-    LOG_CHECK(expiration >= 0 && interval >= 0, "");
-    int64_t now_micros = libbase::TimeUtil::NowMicros();
-    expiration_ = now_micros + expiration * grid;
+
+  Timer(const CallbackTimeoutType& timeout_cb, int64_t range, 
+        int64_t interval = 0, int64_t grid = kSECOND): timeout_cb_(timeout_cb) {
+    LOG_CHECK(range >= 0 && interval >= 0, "");
+    struct timeval now = libbase::TimeUtil::NowTimeval();
+    expiration_ = now;
+    libbase::TimeUtil::AddMicros(expiration_, range * grid);
     interval_ = interval * grid;
     if (!timeout_cb_) {
       LOG_FATAL("Every timer should be equipped with a valide timeout callback.");
     }
 	repeated_ = (interval_ == 0 ? false : true);
     if (repeated_) {
-      expiration_ = now_micros + interval_;
+      expiration_ = now;
+      libbase::TimeUtil::AddMicros(expiration_, interval_);
     }
   }
 
@@ -45,10 +47,11 @@ class Timer {
   
   void Update() {
     LOG_CHECK(repeated_, "");
-    expiration_ = libbase::TimeUtil::NowMicros() + interval_;
+    expiration_ = libbase::TimeUtil::NowTimeval();
+    libbase::TimeUtil::AddMicros(expiration_, interval_);
   }
 	
-  int64_t GetExpiration() const {
+  struct timeval GetExpiration() const {
     return expiration_;
   }
 
@@ -57,8 +60,8 @@ class Timer {
   }
 
  private:
-  int64_t expiration_;
-  int64_t interval_;
+  struct timeval expiration_; 
+  int64_t interval_;   // microseconds
   bool repeated_;
   CallbackTimeoutType timeout_cb_;
 };
