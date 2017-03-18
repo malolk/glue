@@ -74,6 +74,10 @@ void Connection::SendInLoopThread(libbase::ByteBuffer data) {
 
 void Connection::WriteCallback() {
   epoll_ptr_->MustInLoopThread();
+  if (IsTimeout() && state_ != kCLOSED) { // timeout
+	epoll_ptr_->RunLater(std::bind(&EventChannel::HandleClose, &channel_));
+    return;
+  }
 
   ssize_t sent_num = Socket::Send(sockfd_, send_buf_);
   if (sent_num == Socket::kERROR) {
