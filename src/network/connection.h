@@ -28,7 +28,7 @@ class Connection: private libbase::Noncopyable,
   };
   Connection(int sockfd, Epoll* ep)
     : sockfd_(sockfd), epoll_ptr_(ep), channel_(ep, sockfd),
-	  state_(kCONNECTED) { 
+	  state_(kCONNECTED), is_timeout_(false) { 
     LOG_CHECK(sockfd_ >= 0 && ep != NULL, "");
   }
 	
@@ -55,6 +55,10 @@ class Connection: private libbase::Noncopyable,
   int Fd() const {
     return sockfd_;
   }
+
+  bool IsTimeout() { return is_timeout_; }
+  void SetTimeout() { is_timeout_ = true; }
+
  private:
   void SendInLoopThread(libbase::ByteBuffer data);
   void StopWrite();
@@ -64,6 +68,7 @@ class Connection: private libbase::Noncopyable,
   EventChannel channel_;
   /* state_ should be Atomic variable */
   std::atomic<int> state_;
+  bool is_timeout_;
   libbase::ByteBuffer send_buf_;
   libbase::ByteBuffer recv_buf_;
   CallbackReadType read_cb_;

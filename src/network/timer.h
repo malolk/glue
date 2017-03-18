@@ -17,6 +17,8 @@ class Timer {
   };
 
   typedef std::function<void()> CallbackTimeoutType;
+  Timer(): expiration_(0), interval_(0), timeout_cb_() {
+  }
   /* when interval == 0, the timer will just timeout once at most. Otherwise, the next timeout time 
    * will be the sum of current time and the interval. */
   Timer(const CallbackTimeoutType& timeout_cb, int64_t expiration, int64_t interval = 0, int64_t grid = kSECOND)

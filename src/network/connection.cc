@@ -92,6 +92,10 @@ void Connection::WriteCallback() {
 
 void Connection::ReadCallback() {
   epoll_ptr_->MustInLoopThread();
+  if (IsTimeout() && state_ != kCLOSED) { // timeout
+	epoll_ptr_->RunLater(std::bind(&EventChannel::HandleClose, &channel_));
+    return;
+  }
 
   ssize_t recv_num = Socket::Receive(sockfd_, recv_buf_);
   if (recv_num > 0) {
