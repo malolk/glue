@@ -74,7 +74,7 @@ void Connection::SendInLoopThread(libbase::ByteBuffer data) {
 
 void Connection::WriteCallback() {
   epoll_ptr_->MustInLoopThread();
-  if (IsTimeout() && state_ != kCLOSED) { // timeout
+  if (IsTimeout()) { // timeout
 	epoll_ptr_->RunLater(std::bind(&EventChannel::HandleClose, &channel_));
     return;
   }
@@ -96,7 +96,7 @@ void Connection::WriteCallback() {
 
 void Connection::ReadCallback() {
   epoll_ptr_->MustInLoopThread();
-  if (IsTimeout() && state_ != kCLOSED) { // timeout
+  if (IsTimeout()) { // timeout
 	epoll_ptr_->RunLater(std::bind(&EventChannel::HandleClose, &channel_));
     return;
   }
