@@ -25,7 +25,7 @@ void Epoll::Initialize() {
   timer_queue_.Initialize();
 }
 
-void Epoll::RunTimer(TimerQueue::TimerIdType* id, const Timer& timer) {
+void Epoll::RunTimer(TimerQueue::TimerIdType* id, Timer& timer) {
   timer_queue_.AddTimer(id, timer);
 }
 

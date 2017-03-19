@@ -62,12 +62,12 @@ void TimerQueue::DelTimerInLoop(TimerIdType& id) {
   timer_pool_.Delete(id);
 }
  
-/* thread-safe */
-void TimerQueue::AddTimer(TimerIdType* id, const Timer& timer) {
-  epoll_ptr_->RunNowOrLater(std::bind(&TimerQueue::AddTimerInLoop, this, id, std::ref(timer)));
+void TimerQueue::AddTimer(TimerIdType* id, Timer& timer) {
+  timer.id_ = next_id_++;
+  epoll_ptr_->RunNowOrLater(std::bind(&TimerQueue::AddTimerInLoop, this, id, timer));
 }
 
-void TimerQueue::AddTimerInLoop(TimerIdType* id, const Timer& timer) {
+void TimerQueue::AddTimerInLoop(TimerIdType* id, Timer timer) {
   bool is_new_min = true;
   /* Check whether the comming timer is the new-minimum. */
   if (!timer_pool_.Empty()) {

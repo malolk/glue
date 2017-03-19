@@ -18,11 +18,12 @@ class Timer {
 
   typedef std::function<void()> CallbackTimeoutType;
   Timer(): expiration_(libbase::TimeUtil::NowTimeval()), 
-           interval_(0), timeout_cb_() {
+           interval_(0), id_(-1), timeout_cb_() {
   }
 
   Timer(const CallbackTimeoutType& timeout_cb, int64_t range, 
-        int64_t interval = 0, int64_t grid = kSECOND): timeout_cb_(timeout_cb) {
+        int64_t interval = 0, int64_t grid = kSECOND)
+    : id_(-1), timeout_cb_(timeout_cb) {
     LOG_CHECK(range >= 0 && interval >= 0, "");
     struct timeval now = libbase::TimeUtil::NowTimeval();
     expiration_ = now;
@@ -58,11 +59,17 @@ class Timer {
   bool IsRepeated() const { 
     return repeated_; 
   }
+  
+  int64_t Id() const {
+    return id_;
+  }
 
  private:
+  friend class TimerQueue;
   struct timeval expiration_; 
   int64_t interval_;   // microseconds
   bool repeated_;
+  int64_t id_; // timer_id_num, used for debugging
   CallbackTimeoutType timeout_cb_;
 };
 } // namespace network

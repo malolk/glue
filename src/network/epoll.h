@@ -51,7 +51,7 @@ class Epoll: private libbase::Noncopyable {
   void DelChannel(EventChannel* );
   void UpdateChannel(EventChannel* );
 
-  void RunTimer(TimerQueue::TimerIdType* id, const Timer& timer);
+  void RunTimer(TimerQueue::TimerIdType* id, Timer& timer);
   void CancelTimer(TimerQueue::TimerIdType* id);
   int ThreadId() const {
     return process_id_;

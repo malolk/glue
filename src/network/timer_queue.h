@@ -33,19 +33,31 @@ class TimerQueue: private libbase::Noncopyable {
   void Initialize();
   /* User could use id to update or delete timer. 
    * id would be tied to the timer when id was not NULL. */
-  void AddTimer(TimerIdType* id, const Timer& timer);
+  void AddTimer(TimerIdType* id, Timer& timer);
   void DelTimer(TimerIdType* id);
   static bool IsTimerExpired(TimerIdType* id) {
     LOG_CHECK(id != NULL, "");
     return id->expired();
   }
+
+  int64_t GetTimerId(TimerIdType* id) {
+    LOG_CHECK(id != NULL, "");
+    Timer* p = timer_pool_.Get((*id));
+    if (p) {
+      return p->Id();
+    } else {
+      return -1; // this timer is not in the timer_pool.
+    }
+  }
+
  private:
-  void AddTimerInLoop(TimerIdType* id, const Timer& timer);
+  void AddTimerInLoop(TimerIdType* id, Timer timer);
   void DelTimerInLoop(TimerIdType& timer_id);
   void ReadTimerChannel();
   void ResetTimerFd();
 
   Epoll* epoll_ptr_;
+  std::atomic<int64_t> next_id_; // next timer id 
   int timer_fd_;
   EventChannel timer_chann_;
   libbase::Heap<Timer> timer_pool_;
