@@ -23,6 +23,7 @@ class TimeUtil {
                             const struct timeval& rhs);
   static struct timeval DiffTimeval(const struct timeval& lhs,
                                     const struct timeval& rhs);
+  static void WaitInSeconds(int secs);
  private:
   static int ToStringOfMicros(char* buf, int len, int flag);
 };

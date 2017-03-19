@@ -3,8 +3,10 @@
 #include <string>
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <sys/time.h>
 #include <time.h>
+#include <assert.h>
 #include <string.h>
 #include <errno.h>
 
@@ -108,6 +110,18 @@ int TimeUtil::CompareTimeval(const struct timeval& lhs,
     return 1;
   }
   return 0;
+}
+
+void TimeUtil::WaitInSeconds(int secs) {
+  assert(secs >= 0);
+  struct timespec tm;
+  tm.tv_sec = secs;
+  tm.tv_nsec = 0;
+  int ret = ::nanosleep(&tm, NULL);
+  if (ret != 0) {
+    fprintf(stderr, "%s: %d nanosleep errors: %d %s\n", 
+            __func__, __LINE__, ret, strerror(ret));
+  }
 }
 
 } // namespace libbase
