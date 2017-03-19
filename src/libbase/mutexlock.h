@@ -2,6 +2,7 @@
 #define GLUE_LIBBASE_MUTEXLOCK_H_
 
 #include "libbase/noncopyable.h"
+#include "libbase/sys_check.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,34 +13,22 @@ class MutexLock: private Noncopyable {
  public:
   MutexLock() {
     int ret = pthread_mutex_init(&mu_, NULL);
-    if (ret != 0) {
-      fprintf(stderr, "pthread_mutex_init failed");
-      abort();
-    }
+    SYS_CHECK(ret);
   }
 
   void Lock() {
 	int ret = pthread_mutex_lock(&mu_);
-    if (ret != 0) {
-      fprintf(stderr, "pthread_mutex_lock failed");
-      abort();
-    }
+    SYS_CHECK(ret);
   }
 
   void Unlock() {
     int ret = pthread_mutex_unlock(&mu_);
-    if (ret != 0) {
-      fprintf(stderr, "pthread_mutex_unlock failed");
-      abort();
-    }
+    SYS_CHECK(ret);
   }
 
   ~MutexLock() {
     int ret = pthread_mutex_destroy(&mu_);	
-    if (ret != 0) {
-      fprintf(stderr, "pthread_mutex_destroy failed");
-      abort();
-    }
+    SYS_CHECK(ret);
   }
 
  private:

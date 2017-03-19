@@ -3,11 +3,14 @@
 
 #include "libbase/mutexlock.h"
 #include "libbase/noncopyable.h"
+#include "libbase/sys_check.h"
 
+#include <string.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <errno.h>
 #include <sys/time.h>
 
 namespace libbase {
@@ -15,21 +18,18 @@ class CondVar: private Noncopyable {
  public:
   explicit CondVar(MutexLock& mutex_lock): mutex_lock_(mutex_lock) {
     int ret = pthread_cond_init(&cond_var_, NULL);
-    assert(ret == 0);
-    (void)ret;
+    SYS_CHECK(ret);
   }
 
   ~CondVar() {
     int ret = pthread_cond_destroy(&cond_var_);
-    assert(ret == 0);
-    (void)ret;
+    SYS_CHECK(ret);
   }
 
   void Wait() {
     /* mu_ is a data member of MutexLock */
     int ret = pthread_cond_wait(&cond_var_, &mutex_lock_.mu_);
-    assert(ret == 0);
-    (void)ret;
+    SYS_CHECK(ret);
   }
   
   void WaitInSeconds(int secs) {
@@ -40,20 +40,17 @@ class CondVar: private Noncopyable {
     wait_time.tv_sec = secs + now.tv_sec;
     wait_time.tv_nsec = now.tv_usec * 1000UL;
     int ret = pthread_cond_timedwait(&cond_var_, &mutex_lock_.mu_, &wait_time);
-    assert(ret == 0);
-    (void)ret;
+    if (ret && ret != ETIMEDOUT) SYS_CHECK(ret);
   }
 
   void NotifyOne() {
     int ret = pthread_cond_signal(&cond_var_);
-    assert(ret == 0);
-    (void)ret;
+    SYS_CHECK(ret);
   }
 
   void NotifyAll() {
     int ret = pthread_cond_broadcast(&cond_var_);
-    assert(ret == 0);
-    (void)ret;
+    SYS_CHECK(ret);
   }
 
  private:
