@@ -16,7 +16,6 @@ void ThreadPool::Start() {
 }
 
 void ThreadPool::ThreadRoutine() {
-  LOG_TRACE();
   while (true) {
     const TaskType& task = queue_.Get();
     /* Use quit_ to stop now */
@@ -25,9 +24,7 @@ void ThreadPool::ThreadRoutine() {
       break;
     }
     task();
-  LOG_TRACE();
   }
-  LOG_TRACE();
 }
 
 void ThreadPool::Add(const TaskType& task) {
@@ -45,7 +42,6 @@ void ThreadPool::Stop() {
   } 
   LOG_CHECK(state_ == kRUNNING, "ThreadPool is not running");
   state_ = kLEAVING;
-  LOG_TRACE();
   quit_ = true;
   for (int i = 0; i < size_; ++i) {
     /* Add NULL functor to wake the thread */
