@@ -29,10 +29,10 @@ void TestCase(int ary_num, const std::vector<int>& vec) {
   for (auto elem : vec) {
     id_vec.push_back(heap.Insert(elem));
   }
-  int result = 0;
-  LOG_INFO("Update num=%d", (heap.Get(id_vec.front(), result), result));
+  int* result;
+  LOG_INFO("Update num=%d", ((result = heap.Get(id_vec.front())) ? *result : -1));
   heap.Update(id_vec.front(), 1000);
-  LOG_INFO("Delete num=%d", (heap.Get(id_vec.back(), result), result));
+  LOG_INFO("Delete num=%d", ((result = heap.Get(id_vec.back())) ? *result : -1));
   heap.Delete(id_vec.back());
   while (!heap.Empty()) {
     sorted_vec.push_back(heap.TopAndPop());

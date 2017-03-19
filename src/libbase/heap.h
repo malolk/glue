@@ -49,13 +49,12 @@ class Heap: private Noncopyable {
   std::weak_ptr<Element<T>> GetTopId() const;
   int Delete(std::weak_ptr<Element<T>>& id);
   int Update(std::weak_ptr<Element<T>>& id, const T& data);
-  int Get(const std::weak_ptr<Element<T>>& id, T& result) const {
+  T* Get(const std::weak_ptr<Element<T>>& id) const {
     std::shared_ptr<Element<T>> observer(id.lock());
     if (observer) {
-      result = observer->data_;
-      return 1; /* The element is still in the heap. */
+      return &(observer->data_); /* The element is still in the heap. */
     } else {
-      return 0;
+      return NULL;
     }
   }
 
